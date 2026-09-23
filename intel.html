@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>DennisZeroVT | Music Producer &amp; Game Developer</title>
+<meta name="description" content="Music producer and game developer. Original tracks, dev blog, rhythm game stats, friends & collaborators."/>
+<meta name="theme-color" content="#A596DA"/>
+<link rel="canonical" href="https://denniszerovt.github.io/"/>
+
+<!-- Favicons / app icons -->
+<link href="/icons/favicon.ico" rel="icon" sizes="any"/>
+<link href="/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="/icons/site.webmanifest" rel="manifest"/>
+
+<!-- Open Graph / Twitter social preview -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://denniszerovt.github.io/"/>
+<meta property="og:title" content="DennisZeroVT — Music Producer & Game Developer"/>
+<meta property="og:description" content="Independent music producer and game developer."/>
+<meta property="og:image" content="https://denniszerovt.github.io/icons/pfp.png"/>
+<meta property="og:image:width" content="1024"/>
+<meta property="og:image:height" content="1024"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="DennisZeroVT — Music Producer & Game Developer"/>
+<meta name="twitter:description" content="Independent music producer and game developer."/>
+<meta name="twitter:image" content="https://denniszerovt.github.io/icons/pfp.png"/>
+
+<!-- Critical shim: Tailwind is loaded from a CDN below and needs a beat to scan
+     the page and inject utility classes. Until it does, "hidden"/"md:flex"/
+     "md:hidden" utilities don't exist yet, so the desktop nav links and the
+     mobile hamburger can both flash on screen at once on first paint
+     (worse on slow mobile connections). These few rules cover it immediately. -->
+<style>
+  /* FOUC shim - fixed so desktop nav (hidden md:flex) actually shows on desktop */
+  [hidden]{display:none!important}
+  .hidden{display:none}
+  @media (max-width:767px){
+    .md\:flex{display:none!important}
+  }
+  @media (min-width:768px){
+    .md\:hidden{display:none!important}
+    .md\:flex{display:flex!important}
+  }
+</style>
+
+<!-- Third-party assets -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+        --bg-main: #0e0a18;
+        --bg-card: #1a140a;
+        --bg-card-hover: #231a0d;
+        --accent: #A596DA;
+        --accent-glow: rgba(165, 150, 218, 0.3);
+        --text-primary: #f5f5f5;
+        --text-secondary: #d6ccf7; /* light purple-white */
+        --border: rgba(165, 150, 218, 0.15);
+    }
+    
+    * {
+        scroll-behavior: smooth;
+    }
+    
+    body {
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+    }
+    
+    h1, h2, h3, h4, h5 {
+        font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .glass { background: rgba(16, 12, 28, 0.45); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%); border: 1px solid rgba(165, 150, 218, 0.25); }
+    
+    .glow-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .glow-hover:hover {
+        box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
+        transform: translateY(-4px);
+        border-color: rgba(165, 150, 218, 0.4);
+    }
+    
+    .gradient-text {
+        background: linear-gradient(135deg, #A596DA 0%, #8B78CB 50%, #C4B5FD 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .gradient-border {
+        position: relative;
+        background: transparent;
+    }
+    
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(165,150,218,0.5), rgba(165,150,218,0.1));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    
+    .nav-link {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--accent);
+        transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+        width: 100%;
+    }
+    
+    .nav-link.active {
+        color: var(--accent) !important;
+    }
+
+    /* --- NEW: Purple pill navigation (desktop) --- */
+    .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Space Grotesk', sans-serif;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: rgba(255,255,255,0.65);
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .nav-pill:hover {
+        background: rgba(165,150,218,0.16);
+        border-color: rgba(165,150,218,0.38);
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 18px rgba(165,150,218,0.18);
+    }
+    .nav-pill.active {
+        background: linear-gradient(135deg, #A596DA 0%, #C4B5FD 100%) !important;
+        border-color: transparent !important;
+        color: #12101a !important;
+        box-shadow: 0 6px 24px rgba(165,150,218,0.38), 0 0 0 1px rgba(165,150,218,0.25);
+        font-weight: 700;
+    }
+    .nav-pill.active i { color: #12101a !important; }
+    /* Mobile drawer active = purple filled too */
+    #mobile-menu a.active {
+        background: linear-gradient(135deg, #A596DA 0%, #C4B5FD 100%) !important;
+        color: #12101a !important;
+        border: 1px solid transparent;
+        font-weight: 700;
+    }
+    #mobile-menu a.active i { color: #12101a !important; }
+    .nav-pill.active i { color: #12101a; }
+
+    
+    main {
+        animation: fadeInUp 0.4s ease;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .floating {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .music-bar {
+        animation: musicBar 1s ease-in-out infinite;
+    }
+    
+    @keyframes musicBar {
+        0%, 100% { transform: scaleY(0.5); }
+        50% { transform: scaleY(1); }
+    }
+    
+    .music-bar:nth-child(2) { animation-delay: 0.1s; }
+    .music-bar:nth-child(3) { animation-delay: 0.2s; }
+    .music-bar:nth-child(4) { animation-delay: 0.3s; }
+    .music-bar:nth-child(5) { animation-delay: 0.4s; }
+    
+    .person-card, .song-card {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .person-card:hover, .song-card:hover {
+        transform: translateY(-6px) scale(1.02);
+    }
+    
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .overlay.active {
+        display: flex;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .overlay-content {
+        max-width: 90vw;
+        width: 100%;
+        max-height: 85vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .modal-header {
+        flex-shrink: 0;
+        padding: 2rem 2rem 0;
+    }
+    
+    .modal-body {
+        overflow-y: auto;
+        flex: 1;
+        padding: 1.5rem 2rem 2rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .modal-body::-webkit-scrollbar-track {
+        background: var(--bg-main);
+        border-radius: 3px;
+    }
+    
+    .modal-body::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 3px;
+    }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .blog-post {
+        display: none;
+    }
+    
+    .blog-post.active {
+        display: block;
+        animation: fadeInUp 0.4s ease;
+    }
+    
+    .lane-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent) var(--bg-card);
+    }
+    
+    .lane-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .lane-scroll::-webkit-scrollbar-track {
+        background: var(--bg-card);
+        border-radius: 3px;
+    }
+    
+    .lane-scroll::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 3px;
+    }
+
+    /* Friends Section Styles */
+    .content {
+        width: 100%;
+    }
+
+    .title-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .title-header h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .title-header p {
+        color: var(--text-secondary);
+        font-size: 1.125rem;
+    }
+
+    .people-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+    }
+
+    .people-grid .person-card { background: rgba(16, 12, 28, 0.45); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%); border: 1px solid rgba(165,150,218,0.25); border-radius: 1.5rem; overflow: hidden; }
+
+    .person-banner {
+        height: 120px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-card.vivid .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-card.skylar .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-card.erik .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-card.nox .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-card.Kula .person-banner-bg { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(165,150,218,0.25), rgba(139,120,203,0.15)); }
+
+    .person-avatar-wrap {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 4px solid var(--bg-main);
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        overflow: hidden;
+    }
+
+    .person-avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .person-body {
+        padding: 3.5rem 1.5rem 1.5rem;
+        text-align: center;
+    }
+
+    .person-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .person-handle {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .person-role {
+        display: inline-block;
+        padding: 0.375rem 0.875rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .role-friend { background: rgba(165, 150, 218, 0.2); color: #C4B5FD; }
+
+    .person-bio {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+        text-align: left;
+    }
+
+    .person-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .p-tag {
+        padding: 0.25rem 0.625rem;
+        border-radius: 0.375rem;
+        background: rgba(165,150,218,0.1);
+        border: 1px solid rgba(165, 150, 218, 0.2);
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .person-song-ref {
+        background: rgba(165,150,218,0.15);
+        border: 1px solid rgba(165,150,218,0.3);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .person-song-ref:hover {
+        background: rgba(165,150,218,0.25);
+        border-color: var(--accent);
+    }
+
+    .person-song-ref strong {
+        color: var(--accent);
+    }
+
+    .twitter-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        background: rgba(165,150,218,0.1);
+        border: 1px solid rgba(165,150,218,0.3);
+        color: var(--accent);
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .twitter-btn:hover {
+        background: rgba(165, 150, 218, 0.2);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+    }
+
+    .twitter-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+    }
+
+    .badge-platform {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(165,150,218,0.1);
+        border: 1px solid rgba(165, 150, 218, 0.2);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .badge-platform:hover {
+        background: rgba(165, 150, 218, 0.2);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+    }
+
+    .streaming-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ================= REDESIGN: Person / Collab Cards ================= */
+    .people-grid .person-card {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .people-grid .person-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(165,150,218,0.5);
+        box-shadow: 0 20px 50px -20px rgba(165,150,218,0.35), 0 0 0 1px rgba(165,150,218,0.15);
+    }
+
+    .person-banner {
+        height: 88px;
+        position: relative;
+        background: linear-gradient(135deg, rgba(165,150,218,0.35), rgba(139,120,203,0.12) 60%, transparent);
+        overflow: visible;
+    }
+
+    .person-banner::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15), transparent 40%);
+    }
+
+    .person-avatar-ring {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid var(--bg-card);
+        background: linear-gradient(135deg,#A596DA,#8B78CB);
+        position: absolute;
+        left: 24px;
+        top: 46px;
+        box-shadow: 0 8px 24px -6px rgba(0,0,0,0.5);
+        flex-shrink: 0;
+    }
+
+    .person-avatar-ring img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .person-card-body {
+        padding: 44px 24px 22px;
+    }
+
+    .person-card-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 2px;
+    }
+
+    .person-card-handle {
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .person-role-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        background: rgba(165,150,218,0.15);
+        border: 1px solid rgba(165,150,218,0.35);
+        color: #C4B5FD;
+    }
+
+    .person-card-bio {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.55;
+        margin-bottom: 14px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .person-card-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .person-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(165,150,218,0.12);
+        border: 1px solid rgba(165,150,218,0.28);
+        font-size: 0.7rem;
+        color: #A596DA;
+        font-weight: 600;
+    }
+
+    .person-chip span { opacity: .75; font-weight: 400; color: var(--text-secondary); }
+
+    .person-card-footer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .person-social-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #A596DA, #C4B5FD);
+        color: #14101f;
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 700;
+        transition: all 0.25s ease;
+    }
+
+    .person-social-btn:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+    }
+
+    /* ================= REDESIGN: Song Cards ================= */
+    #songs-grid .group, #albums-grid .group {
+        border-radius: 1.25rem;
+        background: rgba(20, 15, 32, 0.55);
+    }
+
+    #songs-grid .group .aspect-square, #albums-grid .group .aspect-square {
+        position: relative;
+    }
+
+    #songs-grid .group .aspect-square::after, #albums-grid .group .aspect-square::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(10,7,18,0.95) 0%, rgba(10,7,18,0.15) 55%, transparent 100%);
+        pointer-events: none;
+    }
+
+    #songs-grid .song-year-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        background: rgba(10,7,18,0.65);
+        border: 1px solid rgba(165,150,218,0.4);
+        color: #C4B5FD;
+        backdrop-filter: blur(6px);
+    }
+
+    /* ================= Music toolbar: search / sort / genre / view ================= */
+    .view-toggle {
+        display: flex;
+        gap: 4px;
+        background: rgba(16,12,28,0.6);
+        border: 1px solid rgba(165,150,218,0.25);
+        border-radius: 0.6rem;
+        padding: 3px;
+        flex-shrink: 0;
+    }
+
+    .view-toggle button {
+        width: 36px;
+        height: 34px;
+        border-radius: 0.45rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .view-toggle button.active {
+        background: rgba(165,150,218,0.25);
+        color: #fff;
+    }
+
+    .genre-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: rgba(16,12,28,0.55);
+        border: 1px solid rgba(165,150,218,0.22);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .genre-pill-btn:hover {
+        border-color: rgba(165,150,218,0.5);
+        color: #fff;
+    }
+
+    .genre-pill-btn.active {
+        background: rgba(165,150,218,0.25);
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    .genre-pill-btn .count {
+        font-size: 0.66rem;
+        opacity: 0.65;
+    }
+
+    .song-genre-chip {
+        font-size: 9px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(165,150,218,0.18);
+        border: 1px solid rgba(165,150,218,0.35);
+        color: #C4B5FD;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-weight: 700;
+    }
+
+    /* List view for songs */
+    #songs-grid.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .song-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .song-row:hover {
+        transform: translateX(4px);
+        border-color: rgba(165,150,218,0.4);
+    }
+
+    .song-row .song-row-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 0.65rem;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: linear-gradient(135deg,#1a1a1a,#0a0a0a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .song-row .song-row-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    @media (max-width: 640px) {
+        .song-row .song-row-genres { display: none; }
+    }
+
+    /* Song card size variants (grid view density) */
+    #songs-grid.size-sm .p-4 { padding: 0.65rem; }
+    #songs-grid.size-sm h3 { font-size: 0.78rem; }
+    #songs-grid.size-sm p { font-size: 0.68rem; }
+    #songs-grid.size-sm .song-genre-chip { font-size: 8px; padding: 1px 6px; }
+    #songs-grid.size-sm .song-year-badge { font-size: 0.58rem; padding: 2px 7px; top: 6px; left: 6px; }
+    #songs-grid.size-sm [class*="w-14"] { width: 2.25rem; height: 2.25rem; }
+    #songs-grid.size-sm .flex.gap-1\.5 { gap: 0.25rem; }
+
+    #songs-grid.size-lg h3 { font-size: 1.15rem; }
+    #songs-grid.size-lg p { font-size: 0.95rem; }
+    #songs-grid.size-lg .p-4 { padding: 1.5rem; }
+
+    /* ================= Home: stats & latest strip ================= */
+    .home-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: rgba(165,150,218,0.15);
+        border: 1px solid rgba(165,150,218,0.2);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .home-stat {
+        background: rgba(16,12,28,0.55);
+        padding: 1.1rem 1rem;
+        text-align: center;
+    }
+
+    .home-stat .num {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .home-stat .lbl {
+        color: var(--text-secondary);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 4px;
+    }
+
+    /* ================= Blog: sidebar layout ================= */
+    .blog-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2.5rem;
+        align-items: start;
+    }
+
+    .blog-sidebar {
+        position: sticky;
+        top: 100px;
+    }
+
+    .blog-search {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .blog-search input {
+        width: 100%;
+        padding: 0.7rem 1rem 0.7rem 2.5rem;
+        border-radius: 0.75rem;
+        background: rgba(16,12,28,0.6);
+        border: 1px solid rgba(165,150,218,0.25);
+        color: #fff;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .blog-search input:focus {
+        border-color: var(--accent);
+    }
+
+    .blog-search i {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .blog-sidebar-block {
+        margin-bottom: 1.75rem;
+    }
+
+    .blog-sidebar-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .cat-list-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.55rem 0.75rem;
+        border-radius: 0.6rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: transparent;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        margin-bottom: 3px;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .cat-list-btn:hover {
+        background: rgba(165,150,218,0.08);
+        color: #fff;
+    }
+
+    .cat-list-btn.active {
+        background: rgba(165,150,218,0.18);
+        border-color: rgba(165,150,218,0.4);
+        color: #fff;
+    }
+
+    .cat-list-btn .count {
+        font-size: 0.7rem;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .blog-select {
+        width: 100%;
+        padding: 0.55rem 0.75rem;
+        border-radius: 0.6rem;
+        background: rgba(16,12,28,0.6);
+        border: 1px solid rgba(165,150,218,0.25);
+        color: #fff;
+        font-size: 0.82rem;
+        outline: none;
+    }
+
+    @media (max-width: 1024px) {
+        .blog-layout { grid-template-columns: 1fr; }
+        .blog-sidebar { position: static; }
+        .home-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+        .title-header h1 {
+            font-size: 2.5rem;
+        }
+        .people-grid {
+            grid-template-columns: 1fr;
+        }
+        .modal-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+        .modal-body {
+            padding: 1rem 1.5rem 1.5rem;
+        }
+    }
+
+        /* Info footer styling - respectful brand buttons */
+    .info-footer {
+        display: grid;
+        gap: 2rem;
+    }
+    .info-footer-col {
+        margin-bottom: 0.5rem;
+    }
+    .info-footer-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+    .info-footer-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+    .info-footer-value a {
+        color: #A596DA;
+        text-decoration: none;
+    }
+    .info-footer-value a:hover {
+        text-decoration: underline;
+    }
+    .info-footer-social {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    .social-links-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .social-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: var(--text-secondary);
+    }
+    .social-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.15);
+    }
+    .social-btn svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        fill: currentColor;
+    }
+    /* Respectful brand colors - always visible, subtle */
+    .sb-spotify { color: #1DB954; border-color: rgba(29,185,84,0.35); background: rgba(29,185,84,0.08); }
+    .sb-apple { color: #fa233b; border-color: rgba(250,35,59,0.35); background: rgba(250,35,59,0.08); }
+    .sb-amazon { color: #FF9900; border-color: rgba(255,153,0,0.35); background: rgba(255,153,0,0.08); }
+    .sb-deezer { color: #00C7F2; border-color: rgba(0,199,242,0.35); background: rgba(0,199,242,0.08); }
+    .sb-tidal { color: #ffffff; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.06); }
+    .sb-youtube { color: #FF0000; border-color: rgba(255,0,0,0.35); background: rgba(255,0,0,0.08); }
+    .sb-twitch { color: #9146FF; border-color: rgba(145,70,255,0.35); background: rgba(145,70,255,0.08); }
+    .sb-twitter { color: #1DA1F2; border-color: rgba(29,161,242,0.35); background: rgba(29,161,242,0.08); }
+    .sb-instagram { color: #E4405F; border-color: rgba(228,64,95,0.35); background: rgba(228,64,95,0.08); }
+    .sb-tiktok { color: #ffffff; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.06); }
+    .sb-steam { color: #66C0F4; border-color: rgba(102,192,244,0.35); background: rgba(102,192,244,0.08); }
+    .sb-itch { color: #FA5C5C; border-color: rgba(250,92,92,0.35); background: rgba(250,92,92,0.08); }
+    
+    .info-footer-copy {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(165,150,218,0.1);
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+
+/* --- BACKDROP --- */
+body {
+  background-image: url('bk.png');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #0a0a0f;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 4, 0.78); /* darker overlay - change 0.78 to 0.6-0.9 */
+  z-index: -1;
+  pointer-events: none;
+}
+/* Page background */
+body{background-image:url('bk.png');background-position:center;background-size:cover;background-attachment:fixed;background-color:#0a0a0f}
+body::after{content:"";position:fixed;inset:0;background:rgba(8,6,4,0.78);z-index:-1;pointer-events:none}
+
+/* FINAL MOBILE FIX - overrides everything */
+@media (max-width: 768px) {
+  /* 1. Song overlay - allow scroll */
+  #songOverlay > div.relative { padding: 0 !important; align-items: flex-end !important; }
+  #songOverlayGlass {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 92vh !important;
+    max-height: 92vh !important;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    overflow-y: auto !important;
+    margin: 0 !important;
+  }
+  #songOverlayGlass > div { width: 100% !important; }
+  
+  /* 2. Tab content must be visible */
+  #ovBlocks {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #f5f5f5 !important;
+    min-height: 80px !important;
+    padding: 1rem 0 !important;
+  }
+  #ovBlocks p {
+    color: #d6ccf7 !important; /* light purple-white */
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    margin: 0 !important;
+  }
+  
+  /* 3. People grid full width */
+  .people-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 16px !important;
+    gap: 16px !important;
+    box-sizing: border-box !important;
+  }
+  .people-grid .person-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  
+  /* 4. Page content stretch */
+  .content, main, section {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* 5. Friend modal */
+  #person-overlay .overlay-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* 6. Bottom player safe area */
+  #bottomPlayer { bottom: 0 !important; padding-bottom: env(safe-area-inset-bottom); }
+}
+
+
+/* SCROLL FIX for song cards */
+@media (max-width: 768px) {
+  #songOverlay {
+    touch-action: pan-y !important;
+  }
+  #songOverlay > div.relative {
+    height: 100dvh !important;
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  #songOverlayGlass {
+    display: block !important; /* kill flex-col */
+    height: 92dvh !important;
+    max-height: 92dvh !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+  }
+  /* Make inner panels stack naturally */
+  #songOverlayGlass > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+  }
+  /* Ensure content area has space */
+  #ovBlocks {
+    padding-bottom: 120px !important; /* space for bottom */
+  }
+  /* Prevent body lock from blocking */
+  body[style*="overflow: hidden"] {
+    position: fixed !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #home, #featured-projects {
+    display: block;
+    width: 100% !important;
+    max-width: 100vw !important;
+    clear: both !important;
+    position: relative !important;
+    float: none !important;
+  }
+  #home .grid, #featured-projects .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+
+/* Kill iOS tap-flash + 300ms tap delay on interactive elements */
+a, button, .social-btn, .nav-link, input[type="range"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Prevent iOS Safari from auto-zooming the page when a text input is focused
+   (any input/select under 16px triggers this) */
+@media (max-width: 768px) {
+  .blog-search input,
+  .blog-select,
+  select {
+    font-size: 16px !important;
+  }
+  /* Fixed backgrounds are expensive and buggy on mobile browsers (repaint
+     glitches / disappears behind position:fixed overlays on iOS Safari) */
+  body {
+    background-attachment: scroll !important;
+  }
+}
+</style>
+
+<style id="hq-styles">
+/* ============================================================
+   HQ / LQ (performance) toggle
+   LQ ("optimized") strips every expensive backdrop-filter blur on the
+   page (not just .glass), turns off the fixed/blurred backdrop, and
+   shortens animations — this is the part mobile GPUs choke on, so this
+   is where the visible/perceptible difference actually comes from.
+   ============================================================ */
+body.optimized .glass,
+body.optimized .people-grid .person-card,
+body.optimized #mobile-menu,
+body.optimized #mobile-menu-overlay,
+body.optimized #songOverlay .absolute.inset-0,
+body.optimized #albumOverlay .absolute.inset-0,
+body.optimized [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.optimized .glass {
+  background: rgba(10,10,15,0.95) !important;
+}
+body.optimized .people-grid .person-card {
+  background: rgba(10,10,15,0.95) !important;
+}
+body.optimized {
+  background-attachment: scroll !important;
+}
+body.optimized::after {
+  background: rgba(8,6,4,0.92) !important;
+}
+body.optimized * {
+  animation-duration: 0.01s !important;
+  transition-duration: 0.1s !important;
+}
+body.optimized video {
+  display: none !important;
+}
+body.optimized .glow-hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+#hq-toggle {
+  touch-action: manipulation;
+}
+#hq-toggle.active {
+  background: rgba(165,150,218,0.4) !important;
+  border-color: #A596DA !important;
+  color: white !important;
+}
+
+/* Tiny toast used to confirm the HQ/LQ tap actually did something */
+#hq-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translate(-50%, 12px);
+  background: rgba(10,10,15,0.95);
+  border: 1px solid rgba(165,150,218,0.35);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  white-space: nowrap;
+}
+#hq-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------------------------------------------------------------------------
+   TAB NAVIGATION - SEO SAFE
+   - No JS: all sections visible (crawlers see everything)
+   - With JS: html.js hides all main>section, only .active shows
+   - Home contains hero + featured, other tabs show only their content
+   --------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+
+/* NEW HAMBURGER - black transparent */
+#mobile-menu-btn{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:all .2s ease}
+#mobile-menu-btn:hover{background:rgba(255,255,255,0.10);border-color:rgba(165,150,218,0.35)}
+#mobile-menu-btn:active{transform:scale(0.95)}
+#mobile-menu-btn .hb-line{width:18px;height:2px;background:#fff;border-radius:2px;transition:all .28s cubic-bezier(.4,0,.2,1);display:block}
+#mobile-menu-btn .hb-line:nth-child(2){width:14px;margin-left:4px}
+#mobile-menu-btn:hover .hb-line:nth-child(2){width:18px;margin-left:0}
+#mobile-menu-btn.is-open .hb-line:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#mobile-menu-btn.is-open .hb-line:nth-child(2){opacity:0;transform:scaleX(0)}
+#mobile-menu-btn.is-open .hb-line:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+#mobile-menu-btn.is-open{background:rgba(165,150,218,0.18);border-color:rgba(165,150,218,0.4)}
+
+#mobile-menu{box-shadow:-24px 0 80px rgba(0,0,0,0.6)}
+#mobile-menu-overlay{transition:opacity .3s ease}
+
+</style>
+<style>
+html.js main > section{display:none !important}
+html.js main > section.active{display:block !important;animation:fadeInUp .35s ease}
+</style>
+<noscript><style>main > section{display:block !important}</style></noscript>
+<script>document.documentElement.classList.add('js')</script>
+
+</head>
+<body class="antialiased">
+<nav class="fixed top-0 w-full z-50 glass">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-20">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#A596DA] to-[#C4B5FD] flex items-center justify-center overflow-hidden">
+<img alt="Dennis" src="/icons/pfp.png" class="w-full h-full object-cover" width="40" height="40" onerror="this.style.display='none';this.parentNode.textContent='D'" loading="lazy"/>
+</div>
+<div>
+<h1 class="text-xl font-bold gradient-text">DennisZeroVT</h1>
+<p class="text-xs text-[var(--text-secondary)]">Producer & Dev</p>
+</div>
+</div>
+<div class="hidden md:flex items-center gap-2.5">
+<a href="#home" data-page="home" class="nav-pill active"><i class="fas fa-house text-[11px]"></i> Home</a>
+<a href="#music" data-page="music" class="nav-pill"><i class="fas fa-music text-[11px]"></i> Music</a>
+<a href="#blog" data-page="blog" class="nav-pill"><i class="fas fa-book-open text-[11px]"></i> Blog</a>
+<a href="#collabs" data-page="collabs" class="nav-pill"><i class="fas fa-handshake text-[11px]"></i> Collabs</a>
+<a href="#friends" data-page="friends" class="nav-pill"><i class="fas fa-users text-[11px]"></i> Friends</a>
+</div>
+<div class="flex items-center gap-2">
+<button id="hq-toggle" class="px-3 py-1.5 rounded-lg glass text-xs font-semibold border border-[#A596DA]/30 hover:bg-[#A596DA]/20 transition md:hidden">HQ</button>
+<button type="button" id="mobile-menu-btn" class="md:hidden" aria-label="Menu" aria-expanded="false">
+<span class="hb-line"></span><span class="hb-line"></span><span class="hb-line"></span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- Mobile Drawer - OUTSIDE nav, more black transparent -->
+<div id="mobile-menu-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] hidden opacity-0 md:hidden"></div>
+<div id="mobile-menu" class="fixed top-0 right-0 h-[100dvh] w-[320px] max-w-[86vw] z-[70] bg-black/80 backdrop-blur-2xl border-l border-white/10 translate-x-full transition-transform duration-300 ease-out md:hidden flex flex-col">
+<div class="p-6 pt-7 border-b border-white/10 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A596DA] to-[#C4B5FD] flex items-center justify-center font-bold text-black">D</div>
+<div><div class="font-bold text-white">DennisZeroVT</div><div class="text-xs text-white/50">Producer & Dev</div></div>
+</div>
+<nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+<a href="#home" data-page="home" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium text-white/60 hover:text-white hover:bg-white/[0.08] transition"><i class="fas fa-house w-5"></i> Home</a>
+<a href="#music" data-page="music" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium text-white/60 hover:text-white hover:bg-white/[0.08] transition"><i class="fas fa-music w-5"></i> My Music</a>
+<a href="#blog" data-page="blog" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium text-white/60 hover:text-white hover:bg-white/[0.08] transition"><i class="fas fa-book-open w-5"></i> Blog</a>
+<a href="#collabs" data-page="collabs" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium text-white/60 hover:text-white hover:bg-white/[0.08] transition"><i class="fas fa-handshake w-5"></i> Collaborators</a>
+<a href="#friends" data-page="friends" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium text-white/60 hover:text-white hover:bg-white/[0.08] transition"><i class="fas fa-users w-5"></i> Friends</a>
+</nav>
+<div class="p-5 border-t border-white/10">
+<div class="flex gap-2.5 mb-4">
+<a href="https://open.spotify.com/artist/1sDYqTh1SQNJksxNAXbxyS" target="_blank" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition"><i class="fab fa-spotify text-sm"></i></a>
+<a href="https://x.com/DennisZeroVT" target="_blank" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition"><i class="fab fa-x-twitter text-sm"></i></a>
+<a href="https://www.instagram.com/DennisZeroVT" target="_blank" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition"><i class="fab fa-instagram text-sm"></i></a>
+<a href="https://youtube.com/@denniszerovt" target="_blank" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition"><i class="fab fa-youtube text-sm"></i></a>
+</div>
+<div class="text-[11px] text-white/35">© DennisZeroVT</div>
+</div>
+</div>
+<main class="relative z-10 pt-20">
+<!-- ===== HOME SECTION ===== -->
+
+<!-- HOME PAGE -->
+<section id="home" class="active">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-8">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm">
+<span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+<span class="text-[var(--text-secondary)]">Available for collaborations</span>
+</div>
+<h1 class="text-5xl lg:text-7xl font-bold leading-tight">
+                            Hey, I'm <span class="text-[#A596DA]">DennisZeroVT</span>
+</h1>
+<p class="text-xl text-[var(--text-secondary)] leading-relaxed">
+                            Independent music producer and game developer 
+                        </p>
+<div class="flex flex-wrap gap-4">
+<a data-page="music" class="px-8 py-4 rounded-lg bg-gradient-to-r from-[#A596DA] to-[#C4B5FD] font-semibold text-black glow-hover inline-flex items-center shadow-[0_8px_24px_rgba(165,150,218,0.35)] hover:shadow-[0_12px_32px_rgba(165,150,218,0.45)] hover:-translate-y-0.5 transition-all" href="#music">
+<i class="fas fa-play mr-2"></i>Listen to My Music
+                            </a>
+<a data-page="blog" class="px-8 py-4 rounded-lg glass font-semibold glow-hover inline-flex items-center border border-white/10 hover:border-[#A596DA]/40 hover:bg-[#A596DA]/10 transition-all" href="#blog">
+<i class="fas fa-gamepad mr-2"></i>View Game Projects
+                            </a>
+</div>
+<div class="home-stats" id="home-stats"></div>
+</div>
+</div>
+</div>
+
+<!-- Latest release / latest post -->
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+<div class="grid md:grid-cols-2 gap-6" id="home-latest"></div>
+</div>
+
+<!-- Featured Projects -->
+<div id="featured-projects" class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="text-center mb-16">
+<h2 class="text-4xl lg:text-5xl font-bold mb-4">In The <span class="gradient-text">Works</span></h2>
+<p class="text-[var(--text-secondary)] text-lg">A peek at what's cooking before it drops — pulled straight from the catalog's status.</p>
+</div>
+<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6" id="featured-projects-grid"></div>
+</div>
+</section>
+
+<!-- MY MUSIC PAGE -->
+
+<!-- ===== MUSIC SECTION ===== -->
+<section id="music">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="text-center mb-16">
+<h1 class="text-5xl lg:text-6xl font-bold mb-4">My <span class="gradient-text">Music</span></h1>
+<p class="text-[var(--text-secondary)] text-lg max-w-2xl mx-auto">
+                        Original compositions blending ambient, electronic, and orchestral elements for games and standalone listening.
+                    </p>
+</div>
+<!-- Featured Songs -->
+<div class="mb-16">
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+<h2 class="text-3xl font-bold">Featured Singles</h2>
+<div class="flex items-center gap-2">
+<div class="view-toggle" id="songSizeToggle">
+  <button data-size="sm" onclick="setSongSize('sm')" title="Small cards"><i class="fas fa-table-cells"></i></button>
+  <button data-size="md" class="active" onclick="setSongSize('md')" title="Medium cards"><i class="fas fa-border-all"></i></button>
+  <button data-size="lg" onclick="setSongSize('lg')" title="Large cards"><i class="fas fa-square"></i></button>
+</div>
+<div class="view-toggle" id="songViewToggle">
+  <button data-view="grid" class="active" onclick="setSongView('grid')" title="Grid view"><i class="fas fa-th-large"></i></button>
+  <button data-view="list" onclick="setSongView('list')" title="List view"><i class="fas fa-list"></i></button>
+</div>
+</div>
+</div>
+
+<div class="glass rounded-2xl p-4 mb-6">
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="blog-search flex-1 min-w-[220px] mb-0">
+      <i class="fas fa-search"></i>
+      <input type="text" id="songSearchInput" placeholder="Search songs by title or artist..." oninput="onSongSearch(this.value)"/>
+    </div>
+    <select class="blog-select" style="width:auto" id="songSortSelect" onchange="onSongSort(this.value)">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="az">Title A–Z</option>
+      <option value="za">Title Z–A</option>
+    </select>
+    <select class="blog-select" style="width:auto" id="songStatusSelect" onchange="onSongStatus(this.value)">
+      <option value="All">All statuses</option>
+    </select>
+    <select class="blog-select" style="width:auto" id="songYearSelect" onchange="onSongYear(this.value)">
+      <option value="All">All years</option>
+    </select>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-4" id="genre-filters"></div>
+</div>
+
+<div id="songResultsBar" class="text-sm text-[var(--text-secondary)] mb-4"></div>
+<div class="grid md:grid-cols-2 gap-6" id="songs-grid">
+<!-- STATIC_SONGS_START -->
+    <div id="song-song-1787263450989" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('song-1787263450989')">
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            <span class="song-year-badge">2026</span>
+            <img src="https://denniszerovt.github.io/SongData/AlbumArt/1787263742565-1000069524.jpg" alt="Dont lose sight" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">
+            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">🎵</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
+                <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            <h3 class="font-semibold text-white truncate">Dont lose sight</h3>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">DennisZeroVT</p>
+            <div class="flex gap-1.5 mt-2 flex-wrap"><span class="song-genre-chip">Pop</span><span class="song-genre-chip">Rock</span></div>
+            <div class="flex gap-1.5 mt-3 flex-wrap"><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#3B82F6;color:#fff">Announced</span></div>
+        </div>
+    </div>
+
+    <div id="song-adrenaline" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('adrenaline')">
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            <span class="song-year-badge">2026</span>
+            <img src="https://denniszerovt.github.io/SongData/AlbumArt/1781376777984-andrenaline.png" alt="Adrenaline" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">
+            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">🎵</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
+                <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            <h3 class="font-semibold text-white truncate">Adrenaline</h3>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">DennisZeroVT</p>
+            <div class="flex gap-1.5 mt-2 flex-wrap"><span class="song-genre-chip">Electronic</span><span class="song-genre-chip">Orchestral</span></div>
+            <div class="flex gap-1.5 mt-3 flex-wrap"><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#10B981;color:#fff">Released</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#1DB954;color:#fff">Spotify</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#FA243C;color:#fff">Apple Music</span></div>
+        </div>
+    </div>
+
+    <div id="song-snowfall" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('snowfall')">
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            <span class="song-year-badge">2025</span>
+            <img src="SongData/AlbumArt/snowfall.png" alt="Snowfall" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">
+            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">🌨️</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
+                <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            <h3 class="font-semibold text-white truncate">Snowfall</h3>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">DennisZeroVT</p>
+            <div class="flex gap-1.5 mt-2 flex-wrap"><span class="song-genre-chip">Ambient</span><span class="song-genre-chip">Lo-fi</span></div>
+            <div class="flex gap-1.5 mt-3 flex-wrap"><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#10B981;color:#fff">Released</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#1DB954;color:#fff">Spotify</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#FA243C;color:#fff">Apple Music</span></div>
+        </div>
+    </div>
+
+    <div id="song-stuck_in_time" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('stuck_in_time')">
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            <span class="song-year-badge">2026</span>
+            <img src="SongData/AlbumArt/stuckintime.png" alt="Stuck In Time" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">
+            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">🕒</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
+                <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="p-4">
+            <h3 class="font-semibold text-white truncate">Stuck In Time</h3>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">DennisZeroVT</p>
+            <div class="flex gap-1.5 mt-2 flex-wrap"><span class="song-genre-chip">Rock</span><span class="song-genre-chip">Alternative</span></div>
+            <div class="flex gap-1.5 mt-3 flex-wrap"><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#10B981;color:#fff">Released</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#1DB954;color:#fff">Spotify</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:#FA243C;color:#fff">Apple Music</span></div>
+        </div>
+    </div>
+<!-- STATIC_SONGS_END -->
+</div>
+</div>
+<!-- Albums -->
+<div>
+<h2 class="text-3xl font-bold mb-8">Albums &amp; Collections</h2><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="albums-grid">
+    <div class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openAlbum('album-1780532205221')">
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60"></div>
+            <div class="absolute bottom-3 left-3">
+                <span class="px-2 py-1 rounded-full bg-[#A596DA]/20 text-[#A596DA] text-[10px] font-medium backdrop-blur">In Progress</span>
+            </div>
+        </div>
+        <div class="p-4">
+            <h3 class="font-semibold text-white truncate">Solo EP 💿</h3>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">2026 • 2 tracks</p>
+        </div>
+    </div>
+</div>
+
+</div>
+</div>
+</section>
+
+<!-- GAME DEV BLOG PAGE -->
+
+<!-- ===== BLOG SECTION ===== -->
+<section id="blog">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="text-center mb-12">
+<h1 class="text-5xl lg:text-6xl font-bold mb-4"><span class="gradient-text">Blog</span></h1>
+<p class="text-[var(--text-secondary)] text-lg max-w-2xl mx-auto">
+                        Dev logs, progress updates, and behind-the-scenes content from Snowfall and Stuck In Time.
+                    </p>
+</div>
+
+<div class="blog-layout">
+  <!-- Sidebar -->
+  <aside class="blog-sidebar">
+    <div class="glass rounded-2xl p-5">
+      <div class="blog-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="blogSearchInput" placeholder="Search posts..." oninput="onBlogSearch(this.value)"/>
+      </div>
+
+      <div class="blog-sidebar-block">
+        <div class="blog-sidebar-title">Sort by</div>
+        <select class="blog-select" id="blogSortSelect" onchange="onBlogSort(this.value)">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="az">Title A–Z</option>
+          <option value="za">Title Z–A</option>
+        </select>
+      </div>
+
+      <div class="blog-sidebar-block">
+        <div class="blog-sidebar-title">Year</div>
+        <select class="blog-select" id="blogYearSelect" onchange="onBlogYear(this.value)">
+          <option value="All">All years</option>
+        </select>
+      </div>
+
+      <div class="blog-sidebar-block">
+        <div class="blog-sidebar-title">Categories</div>
+        <div id="category-filters"></div>
+      </div>
+
+      <div class="blog-sidebar-block hidden" id="subcategory-filters-wrap">
+        <div class="blog-sidebar-title">Subcategories</div>
+        <div id="subcategory-filters"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Posts -->
+  <div>
+    <div class="flex items-center justify-between mb-5 text-sm text-[var(--text-secondary)]" id="blogResultsBar"></div>
+    <div id="blog-posts-container" class="space-y-8 mb-12"></div>
+  </div>
+</div>
+
+</div>
+</section>
+
+
+<!-- ===== COLLABS SECTION ===== -->
+<section id="collabs">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="content">
+<div class="title-header">
+<h1>Collabs</h1>
+<p>// People I've made things with</p>
+</div>
+<div class="people-grid" id="collabs-grid"></div>
+</div>
+</div>
+</section>
+
+
+<!-- ===== FRIENDS SECTION ===== -->
+<section id="friends">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<div class="content">
+<div class="title-header">
+<h1 class="gradient-text">Friends</h1>
+<p>// The people who made the journey worth it</p>
+</div>
+<div class="people-grid" id="friends-grid"></div>
+</div>
+</div>
+</section>
+
+
+</main>
+<!-- Person Overlay Modal (friends / collaborators) -->
+<div class="overlay" id="person-overlay" onclick="closePersonOverlay(event)">
+<div class="overlay-content glass rounded-2xl gradient-border" onclick="event.stopPropagation()">
+<div class="modal-header">
+<div class="flex items-start justify-between mb-6">
+<div class="flex items-center gap-4" id="overlay-header">
+<!-- Dynamic content -->
+</div>
+<button class="w-10 h-10 rounded-lg glass flex items-center justify-center hover:bg-[var(--bg-card-hover)] transition-colors flex-shrink-0" onclick="closePersonOverlay()" aria-label="Close">
+<i class="fas fa-times text-xl"></i>
+</button>
+</div>
+</div>
+<div class="modal-body" id="overlay-body">
+<!-- Dynamic content -->
+</div>
+</div>
+</div>
+
+<!-- Song Overlay -->
+<div class="fixed inset-0 z-[100] hidden" id="songOverlay">
+<div class="absolute inset-0 bg-black/90 backdrop-blur-xl" onclick="closeOverlay()"></div>
+<div class="relative h-full flex items-center justify-center p-4 md:p-8">
+<div class="glass rounded-[2rem] w-full max-w-6xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row" id="songOverlayGlass">
+<!-- Left: Player -->
+<div class="md:w-[380px] p-8 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/10">
+<button class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" onclick="closeOverlay()" aria-label="Close">
+<svg fill="none" height="20" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+</button>
+<div class="w-64 h-64 rounded-2xl overflow-hidden shadow-2xl mb-6 relative bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f]">
+<img alt="" class="w-full h-full object-cover hidden" id="ovCoverImg" loading="lazy"/>
+<div class="w-full h-full flex items-center justify-center text-7xl opacity-30" id="ovCoverEmoji"></div>
+</div>
+<h2 class="text-2xl font-bold text-center" id="ovTitle"></h2>
+<p class="text-[var(--text-secondary)] mt-1" id="ovArtist"></p>
+<!-- Progress -->
+<div class="w-full mt-8">
+<div class="relative h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer group" id="ovProgressWrap">
+<div class="absolute h-full bg-gradient-to-r from-[#A596DA] to-[#C4B5FD] rounded-full transition-all" id="ovProgress" style="width:0%"></div>
+<div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition" id="ovHandle" style="left:0%"></div>
+</div>
+<div class="flex justify-between text-xs text-[var(--text-secondary)] mt-2 font-mono">
+<span id="ovCurrent">0:00</span>
+<span id="ovDuration">0:00</span>
+</div>
+</div>
+<!-- Controls -->
+<div class="flex items-center gap-6 mt-6">
+<button class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition" onclick="seekAudio(-10)" aria-label="Rewind 10 seconds">
+<svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"></path></svg>
+</button>
+<button class="w-14 h-14 rounded-full bg-[#A596DA] hover:bg-[#8B78CB] text-black flex items-center justify-center shadow-lg transition-transform hover:scale-105" id="ovPlayBtn" onclick="toggleSongPlay()" aria-label="Play/Pause">
+<svg fill="currentColor" height="24" id="ovPlayIcon" viewbox="0 0 24 24" width="24"><path d="M8 5v14l11-7z"></path></svg>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition" onclick="seekAudio(10)" aria-label="Forward 10 seconds">
+<svg fill="currentColor" height="20" viewbox="0 0 24 24" width="20"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"></path></svg>
+</button>
+</div>
+<!-- Volume -->
+<div class="flex items-center gap-3 w-full mt-6">
+<svg class="text-[var(--text-secondary)]" fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"></path></svg>
+<input class="flex-1 accent-[#A596DA]" id="ovVolume" max="1" min="0" step="0.01" type="range" value="0.8" aria-label="Volume"/>
+</div>
+<!-- Credits -->
+<div class="w-full mt-7 pt-6 border-t border-white/10 hidden" id="ovCreditsWrap">
+<h4 class="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] font-bold mb-3 text-center">Credits</h4>
+<div class="flex flex-col gap-1.5 w-full" id="ovCredits"></div>
+</div>
+</div>
+<!-- Right: Info -->
+<div class="flex-1 p-8 overflow-y-auto">
+<div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+<h4 class="text-xs uppercase tracking-wider text-[var(--text-secondary)] font-bold">Story</h4>
+</div>
+<div class="prose prose-invert max-w-none text-[15px] leading-relaxed" id="ovBlocks"></div>
+<div class="mt-8 pt-6 border-t border-white/10">
+<h4 class="text-xs uppercase tracking-wider text-[var(--text-secondary)] mb-3">Listen on</h4>
+<div class="flex flex-wrap gap-2" id="ovStreaming"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<audio id="songAudio" preload="metadata"></audio>
+
+<!-- Bottom Persistent Player -->
+<div class="fixed bottom-0 left-0 right-0 z-[90] translate-y-full transition-transform duration-300" id="bottomPlayer">
+<div class="mx-4 mb-4 glass rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+<div class="h-1 bg-white/10 relative cursor-pointer" id="bpProgressWrap">
+<div class="absolute h-full bg-gradient-to-r from-[#A596DA] to-[#C4B5FD] transition-all" id="bpProgress" style="width:0%"></div>
+</div>
+<div class="flex items-center gap-4 p-3">
+<div class="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f] flex-shrink-0 cursor-pointer" onclick="reopenOverlay()">
+<img alt="" class="w-full h-full object-cover hidden" id="bpCover" loading="lazy"/>
+<div class="w-full h-full flex items-center justify-center text-xl opacity-50" id="bpEmoji"></div>
+</div>
+<div class="flex-1 min-w-0 cursor-pointer" onclick="reopenOverlay()">
+<div class="text-sm font-medium truncate text-white" id="bpTitle"></div>
+<div class="text-xs text-[var(--text-secondary)] truncate" id="bpArtist"></div>
+</div>
+<div class="flex items-center gap-2">
+<div class="hidden md:flex items-center gap-2 mr-1">
+<svg class="text-[var(--text-secondary)]" fill="currentColor" height="14" viewbox="0 0 24 24" width="14"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"></path></svg>
+<input class="w-16 accent-[#A596DA]" id="bpVolume" max="1" min="0" step="0.01" type="range" value="0.8" aria-label="Volume"/>
+</div>
+<span class="text-[11px] font-mono text-[var(--text-secondary)] w-10 text-right" id="bpTime">0:00</span>
+<button class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" onclick="toggleSongPlay()" aria-label="Play/Pause">
+<svg fill="currentColor" height="16" id="bpPlayIcon" viewbox="0 0 24 24" width="16"><path d="M8 5v14l11-7z"></path></svg>
+</button>
+<button class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-[var(--text-secondary)]" onclick="stopPlayback()" aria-label="Close player">
+<svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="16"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Album Overlay -->
+<div id="albumOverlay" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/90 backdrop-blur-xl" onclick="closeAlbum()"></div>
+  <div class="relative h-full flex items-center justify-center p-4 md:p-8">
+    <div class="glass rounded-[2rem] w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
+      <div class="md:w-[340px] p-8 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/10">
+        <button onclick="closeAlbum()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="w-60 h-60 rounded-2xl overflow-hidden shadow-2xl mb-6">
+          <img id="alCover" class="w-full h-full object-cover" alt="" loading="lazy">
+        </div>
+        <h2 id="alTitle" class="text-2xl font-bold text-center"></h2>
+        <p id="alArtist" class="text-[var(--text-secondary)] mt-1"></p>
+        <div id="alStatus" class="mt-3 px-3 py-1 rounded-full bg-[#A596DA]/20 text-[#A596DA] text-xs"></div>
+      </div>
+      <div class="flex-1 p-8 overflow-y-auto">
+        <h3 class="text-lg font-semibold mb-4">Tracklist</h3>
+        <div id="alTracks" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="glass border-t border-[#A596DA]/10 mt-20">
+<div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<!-- Info / Contact footer -->
+<div class="info-footer">
+<div class="info-footer-col">
+<div class="info-footer-label">Full Name</div>
+<div class="info-footer-value">Dennis van Wijngaarden</div>
+</div>
+<div class="info-footer-col">
+<div class="info-footer-label">Email</div>
+<div class="info-footer-value"><a href="mailto:Denniszero030@outlook.com">Denniszero030@outlook.com</a></div>
+</div>
+<!-- Social links in footer -->
+<div class="info-footer-social">
+<div>
+<div class="info-footer-label">🎵 Music Platforms</div>
+<div class="social-links-row" style="margin-top:8px;">
+<a class="social-btn sb-spotify" href="https://open.spotify.com/artist/1sDYqTh1SQNJksxNAXbxyS" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779.179-.899.539-.12.421.18.78.54.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"></path></svg>Spotify</a>
+<a class="social-btn sb-amazon" href="https://music.amazon.com/artists/B0FNKV8PTN/denniszerovt" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M13.958 10.09c0 1.232.029 2.256-.591 3.351-.502.891-1.301 1.438-2.186 1.438-1.214 0-1.922-.924-1.922-2.292 0-2.692 2.415-3.182 4.699-3.182v.685zm3.186 7.705c-.209.189-.512.201-.745.074-1.052-.872-1.238-1.276-1.814-2.106-1.734 1.767-2.962 2.297-5.209 2.297-2.66 0-4.731-1.641-4.731-4.925 0-2.565 1.391-4.309 3.37-5.164 1.715-.754 4.11-.891 5.942-1.095v-.41c0-.753.06-1.642-.384-2.294-.385-.578-1.124-.817-1.775-.817-1.206 0-2.277.618-2.54 1.897-.054.285-.261.567-.549.582l-3.061-.333c-.259-.056-.545-.267-.472-.666C5.744 1.896 8.558 1 11.07 1c1.284 0 2.962.342 3.976 1.307C16.309 3.539 16.2 5.176 16.2 6.958v4.738c0 1.423.591 2.048 1.147 2.819.195.274.239.601-.01.806l-2.193 1.474zm3.559 1.688c-2.748 1.472-5.735 2.181-8.453 2.181-4.027 0-7.927-1.393-11.081-3.706-.277-.202-.481.154-.251.416C3.9 21.568 8.324 24 13.217 24c3.767 0 8.128-1.376 11.013-3.963.531-.475-.047-1.203-.527-.554z"></path></svg>Amazon Music</a>
+<a class="social-btn sb-deezer" href="https://www.deezer.com/en/artist/342624221" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M18.81 4.16v1.83H24V4.16h-5.19zm0 3.65v1.83H24V7.81h-5.19zM0 15.11v1.83h5.19v-1.83H0zm6.09 0v1.83h5.19v-1.83H6.09zm6.1 0v1.83H17.4v-1.83h-5.21zm6.1 0v1.83H24v-1.83h-5.19zM0 18.77v1.83h5.19v-1.83H0zm6.09 0v1.83h5.19v-1.83H6.09zm6.1 0v1.83H17.4v-1.83h-5.21zm6.1 0v1.83H24v-1.83h-5.19zM12.19 7.81v1.83h5.19V7.81h-5.19zm6.62 0v1.83H24V7.81h-5.19zm-6.62 3.65v1.83h5.19v-1.83h-5.19zm6.62 0v1.83H24v-1.83h-5.19z"></path></svg>Deezer</a>
+<a class="social-btn sb-apple" href="https://music.apple.com/nl/artist/denniszerovt/1840250778" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z"></path></svg>Apple Music</a>
+<a class="social-btn sb-tidal" href="https://tidal.com/artist/66966649" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M12.012 3.992L8.008 7.996 4.004 3.992 0 7.996l4.004 4.004L8.008 7.996l4.004 4.004 4.004-4.004zM8.008 16.004l4.004-4.004 4.004 4.004L19.996 12l-3.98-3.98-4.004 4.004L8.008 8.02 4.004 12z"></path></svg>Tidal</a>
+</div>
+</div>
+<div>
+<div class="info-footer-label">🎮 Social &amp; Streaming</div>
+<div class="social-links-row" style="margin-top:8px;">
+<a class="social-btn sb-twitch" href="https://www.twitch.tv/denniszerovt" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"></path></svg>Twitch</a>
+<a class="social-btn sb-youtube" href="https://youtube.com/@denniszerovt" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>YouTube</a>
+<a class="social-btn sb-twitter" href="https://x.com/DennisZeroVT" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"></path></svg>Twitter / X</a>
+<a class="social-btn sb-instagram" href="https://www.instagram.com/DennisZeroVT" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"></path></svg>Instagram</a>
+<a class="social-btn sb-tiktok" href="https://www.tiktok.com/@denniszerovt" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.73a8.24 8.24 0 0 0 4.83 1.56V6.83a4.85 4.85 0 0 1-1.06-.14z"></path></svg>TikTok</a>
+<a class="social-btn sb-steam" href="https://steamcommunity.com/id/DennisZeroVT/" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.718L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.606 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.455 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"></path></svg>Steam</a>
+<a class="social-btn sb-itch" href="https://denniszerovt.itch.io/" rel="noopener" target="_blank"><svg viewbox="0 0 24 24"><path d="M3.13 1.338C2.08 1.96.02 4.328 0 4.95v1.03c0 1.303 1.22 2.45 2.325 2.45 1.33 0 2.436-1.102 2.436-2.41 0 1.308 1.07 2.41 2.4 2.41 1.328 0 2.362-1.102 2.362-2.41 0 1.308 1.137 2.41 2.467 2.41h.024c1.33 0 2.466-1.102 2.466-2.41 0 1.308 1.034 2.41 2.363 2.41 1.33 0 2.4-1.102 2.4-2.41 0 1.308 1.105 2.41 2.435 2.41C22.78 8.43 24 7.283 24 5.98V4.95c-.02-.622-2.08-2.99-3.13-3.612C17.37.917 8.51.81 3.13 1.337zM8.56 9.817c-.397.006-.812.076-1.13.218C6.323 10.522 6.1 11.25 6 12.917 5.785 16.25 5.17 18.8 5.1 22.17c2.73.572 5.55.886 8.1.826 2.396.013 4.87-.278 7.3-.826-.07-3.37-.688-5.92-.9-9.253-.1-1.667-.325-2.395-1.43-2.882-.36-.157-.832-.225-1.268-.216-.34.007-.68.078-.958.245-1.265.753-2.63.74-3.96.02-.37-.208-.76-.28-1.425-.268zm-.264 3.35h7.388c.103 0 .185.083.185.185v2.656c0 .102-.082.184-.185.184H8.297c-.102 0-.184-.082-.184-.184v-2.656c0-.102.082-.185.184-.185z"></path></svg>itch.io</a>
+</div>
+</div>
+</div>
+<div class="info-footer-copy">
+            © Dennis van Wijngaarden · All music on this page is my own original work. All rights reserved.
+          </div>
+</div>
+</div>
+</footer>
+
+<div id="hq-toast"></div>
+
+<script src="app.js?v=1787264295007"></script>
+</body>
+</html>
