@@ -430,6 +430,16 @@ const SITE_POSTS = [
 
 /* =========================== END OF SITE CONTENT =========================== */
 
+/* Universal 1:1 Square Media Cover Renderer Helper */
+function renderSquareMedia(coverImg, emoji = '🎵', alt = '', extraClass = '') {
+  if (coverImg) {
+    return `
+      <img src="${coverImg}" alt="${alt}" class="w-full h-full object-cover aspect-square ${extraClass}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
+      <div class="hidden absolute inset-0 flex items-center justify-center text-4xl aspect-square">${emoji}</div>`;
+  }
+  return `<div class="w-full h-full flex items-center justify-center text-4xl aspect-square">${emoji}</div>`;
+}
+
 function initSiteData() {
   SONGS = Object.fromEntries(SITE_SONGS.map(s => [s.id, {
     id: s.id,
@@ -442,7 +452,7 @@ function initSiteData() {
     credits: s.credits || [],
     src: s.audio,
     cover: s.coverEmoji || '🎵',
-    coverImg: s.cover,
+    coverImg: s.cover || s.coverImg || '',
     badges: s.badges || [],
     streaming: s.streaming || {},
     about: s.about || '',
@@ -468,7 +478,12 @@ function initSiteData() {
     projects: p.projects || []
   }]));
 
-  ALBUMS = Object.fromEntries(SITE_ALBUMS.map(a => [a.id, a]));
+  ALBUMS = Object.fromEntries(SITE_ALBUMS.map(a => [a.id, {
+    ...a,
+    coverImg: a.coverImg || a.cover || '',
+    coverEmoji: a.coverEmoji || '💿'
+  }]));
+
   allPosts = [...SITE_POSTS].sort((a, b) => new Date(b.date) - new Date(a.date));
   categories = SITE_CATEGORIES;
 
@@ -484,7 +499,7 @@ function initSiteData() {
 }
 
 /* ============================================================
-   Home: "In The Works" panel, driven by song status
+   Home: "In The Works" panel (Index Section 1)
    ============================================================ */
 function renderFeaturedProjects(){
   const wrap = document.getElementById('featured-projects-grid');
@@ -509,23 +524,26 @@ function renderFeaturedProjects(){
   wrap.innerHTML = inProgress.map(s => {
     const color = STATUS_META[s.status] || '#A596DA';
     const genreChips = (s.genres || []).slice(0, 3).map(g => `<span class="song-genre-chip">${g}</span>`).join('');
+    const coverUrl = s.cover || s.coverImg;
+    const coverEmoji = s.coverEmoji || '🎵';
+
     return `
-    <div class="glass rounded-2xl p-6 glow-hover gradient-border cursor-pointer transition-all duration-300 hover:-translate-y-1" onclick="document.querySelector('[data-page=music]').click(); setTimeout(()=>openSong('${s.id}'), 250)">
-      <div class="flex items-start justify-between mb-5">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#A596DA]/25 to-[#6B5C9B]/15 flex items-center justify-center">
-          <i class="fas fa-compact-disc text-xl text-[#A596DA]"></i>
+    <div class="glass rounded-2xl p-5 glow-hover gradient-border cursor-pointer transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between" onclick="document.querySelector('[data-page=music]').click(); setTimeout(()=>openSong('${s.id}'), 250)">
+      <div>
+        <div class="aspect-square relative w-full rounded-xl overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] mb-4 flex items-center justify-center">
+          ${coverUrl ? `<img src="${coverUrl}" alt="${s.title}" class="w-full h-full object-cover aspect-square" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden')"><div class="hidden text-4xl aspect-square flex items-center justify-center">${coverEmoji}</div>` : `<div class="text-4xl aspect-square flex items-center justify-center">${coverEmoji}</div>`}
+          <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md z-10" style="background:${color}30;color:${color};border:1px solid ${color}66">${s.status}</span>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:${color}20;color:${color};border:1px solid ${color}55">${s.status}</span>
+        <h3 class="text-xl font-bold mb-1 truncate">${s.title}</h3>
+        <p class="text-sm text-[var(--text-secondary)] mb-3">${s.year || ''}</p>
       </div>
-      <h3 class="text-xl font-bold mb-1">${s.title}</h3>
-      <p class="text-sm text-[var(--text-secondary)] mb-4">${s.year || ''}</p>
       ${genreChips ? `<div class="flex flex-wrap gap-1.5">${genreChips}</div>` : ''}
     </div>`;
   }).join('');
 }
 
 /* ============================================================
-   Home: stats + latest release/post
+   Home: stats + latest release/post (Index Section 2)
    ============================================================ */
 function renderHome(){
   const statsEl = document.getElementById('home-stats');
@@ -548,31 +566,33 @@ function renderHome(){
 
     let html = '';
     if (latestSong) {
+      const coverUrl = latestSong.cover || latestSong.coverImg;
+      const emoji = latestSong.coverEmoji || '🎵';
       html += `
       <div class="glass rounded-2xl p-6 flex items-center gap-5 glow-hover cursor-pointer" onclick="document.querySelector('[data-page=music]').click(); setTimeout(()=>openSong('${latestSong.id}'), 250)">
-        <div class="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f] flex-shrink-0 flex items-center justify-center text-3xl">
-          ${latestSong.cover ? `<img src="${latestSong.cover}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : (latestSong.coverEmoji || '🎵')}
+        <div class="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f] flex-shrink-0 relative flex items-center justify-center text-3xl aspect-square">
+          ${coverUrl ? `<img src="${coverUrl}" class="w-full h-full object-cover aspect-square" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden')"><div class="hidden text-3xl">${emoji}</div>` : emoji}
         </div>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <div class="text-xs uppercase tracking-wider text-[var(--accent)] font-semibold mb-1">Latest Release</div>
           <div class="font-bold text-white text-lg truncate">${latestSong.title}</div>
-          <div class="text-sm text-[var(--text-secondary)]">${latestSong.year || ''}</div>
+          <div class="text-sm text-[var(--text-secondary)]">${latestSong.year || ''} • ${latestSong.artist}</div>
         </div>
-        <i class="fas fa-play ml-auto text-[var(--accent)]"></i>
+        <i class="fas fa-play text-[var(--accent)] text-lg flex-shrink-0"></i>
       </div>`;
     }
     if (latestPost) {
       html += `
       <div class="glass rounded-2xl p-6 flex items-center gap-5 glow-hover cursor-pointer" onclick="document.querySelector('[data-page=blog]').click()">
-        <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-[#A596DA]/25 to-[#6B5C9B]/15 flex-shrink-0 flex items-center justify-center text-3xl text-[var(--accent)]">
+        <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-[#A596DA]/25 to-[#6B5C9B]/15 flex-shrink-0 flex items-center justify-center text-3xl text-[var(--accent)] aspect-square">
           <i class="fas fa-book-open"></i>
         </div>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <div class="text-xs uppercase tracking-wider text-[var(--accent)] font-semibold mb-1">Latest Blog Post</div>
           <div class="font-bold text-white text-lg truncate">${latestPost.title}</div>
           <div class="text-sm text-[var(--text-secondary)]">${latestPost.category} • ${latestPost.date || ''}</div>
         </div>
-        <i class="fas fa-arrow-right ml-auto text-[var(--accent)]"></i>
+        <i class="fas fa-arrow-right text-[var(--accent)] text-lg flex-shrink-0"></i>
       </div>`;
     }
     latestEl.innerHTML = html;
@@ -580,7 +600,6 @@ function renderHome(){
 }
 
 document.addEventListener('DOMContentLoaded', initSiteData);
-
 
 const platformIcons = {
   spotify: '<i class="fab fa-spotify"></i>',
@@ -628,7 +647,7 @@ function getBadgeStyle(name) {
 }
 
 /* ============================================================
-   Music: songs & albums grids
+   Music: songs & albums grids (Section 2 & 3)
    ============================================================ */
 
 let currentSongSearch = '';
@@ -751,8 +770,8 @@ function renderSongsGrid() {
       const genreChips = (song.genres||[]).map(g => `<span class="song-genre-chip">${g}</span>`).join('');
       return `
       <div id="song-${key}" class="song-row glass" onclick="openSong('${key}')">
-        <div class="song-row-thumb">
-          ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" onerror="this.style.display='none'">` : (song.cover||'🎵')}
+        <div class="song-row-thumb w-12 h-12 rounded-xl overflow-hidden relative flex-shrink-0 aspect-square bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f] flex items-center justify-center">
+          ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" class="w-full h-full object-cover aspect-square" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden')"><div class="hidden text-xl">${song.cover || '🎵'}</div>` : `<span class="text-xl">${song.cover || '🎵'}</span>`}
         </div>
         <div class="flex-1 min-w-0">
           <div class="font-semibold text-white truncate">${song.name}</div>
@@ -784,9 +803,9 @@ function renderSongsGrid() {
     return `
     <div id="song-${key}" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('${key}')">
         <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
-            ${song.year ? `<span class="song-year-badge">${song.year}</span>` : ''}
-            ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
-            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">${song.cover || '🎵'}</div>
+            ${song.year ? `<span class="song-year-badge z-10">${song.year}</span>` : ''}
+            ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" class="w-full h-full object-cover aspect-square transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden')">` : ''}
+            <div class="${song.coverImg ? 'hidden ' : ''}absolute inset-0 flex items-center justify-center text-5xl opacity-80 aspect-square">${song.cover || '🎵'}</div>
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
                 <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
@@ -808,25 +827,28 @@ function renderAlbumsGrid() {
   if (!grid) return;
   grid.innerHTML = Object.keys(ALBUMS).map(key => {
     const album = ALBUMS[key];
+    const coverUrl = album.coverImg || album.cover;
+    const coverEmoji = album.coverEmoji || '💿';
+    const trackCount = (album.tracks || (album.tracklist || []).length) || 0;
     return `
     <div class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openAlbum('${key}')">
-        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
-            ${album.coverImg ? `<img src="${album.coverImg}" alt="${album.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
+        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center">
+            ${coverUrl ? `<img src="${coverUrl}" alt="${album.name}" class="w-full h-full object-cover aspect-square transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden')"><div class="hidden text-5xl aspect-square flex items-center justify-center">${coverEmoji}</div>` : `<div class="text-5xl aspect-square flex items-center justify-center">${coverEmoji}</div>`}
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60"></div>
-            <div class="absolute bottom-3 left-3">
-                <span class="px-2 py-1 rounded-full bg-[#A596DA]/20 text-[#A596DA] text-[10px] font-medium backdrop-blur">${album.status || ''}</span>
+            <div class="absolute bottom-3 left-3 z-10">
+                <span class="px-2.5 py-1 rounded-full bg-[#A596DA]/20 text-[#A596DA] text-[10px] font-medium backdrop-blur border border-[#A596DA]/30">${album.status || 'Album'}</span>
             </div>
         </div>
         <div class="p-4">
             <h3 class="font-semibold text-white truncate">${album.name}</h3>
-            <p class="text-sm text-[var(--text-secondary)] mt-1">${album.year || ''} • ${(album.tracks || (album.tracklist||[]).length) || 0} tracks</p>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">${album.year || ''} • ${trackCount} track${trackCount === 1 ? '' : 's'}</p>
         </div>
     </div>`;
   }).join('');
 }
 
 /* ============================================================
-   Friends & Collaborators
+   Friends & Collaborators (Section 3)
    ============================================================ */
 
 function renderPeople(peopleList) {
@@ -856,8 +878,8 @@ function renderPeople(peopleList) {
     card.onclick = () => openPersonOverlay(p.id);
     card.innerHTML = `
       <div class="person-banner">
-        <div class="person-avatar-ring">
-          <img src="${tryJpg}" alt="${p.name}" onerror="this.onerror=null; this.src='${tryPng}';">
+        <div class="person-avatar-ring aspect-square overflow-hidden rounded-full">
+          <img src="${tryJpg}" alt="${p.name}" class="w-full h-full object-cover aspect-square" onerror="this.onerror=null; this.src='${tryPng}';">
         </div>
       </div>
       <div class="person-card-body">
@@ -904,8 +926,8 @@ window.openPersonOverlay = function(personId) {
   const tryPng = avatarBase + '.png';
 
   header.innerHTML = `
-      <div class="w-16 h-16 rounded-full bg-gradient-to-br ${person.color} flex items-center justify-center overflow-hidden flex-shrink-0 relative">
-          <img src="${tryJpg}" alt="${person.name}" class="w-full h-full object-cover" onerror="this.onerror=function(){this.style.display='none'}; this.src='${tryPng}';">
+      <div class="w-16 h-16 rounded-full bg-gradient-to-br ${person.color} flex items-center justify-center overflow-hidden flex-shrink-0 relative aspect-square">
+          <img src="${tryJpg}" alt="${person.name}" class="w-full h-full object-cover aspect-square" onerror="this.onerror=function(){this.style.display='none'}; this.src='${tryPng}';">
           <i class="${person.icon} text-2xl absolute" style="z-index:-1"></i>
       </div>
       <div>
@@ -1036,14 +1058,14 @@ function renderContentBlocks(blocks, accentColor){
       if(song){
         const name = (song.name||'').replace(/</g,'&lt;');
         const thumb = song.coverImg
-          ? `<img src="${song.coverImg}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+          ? `<img src="${song.coverImg}" alt="" class="aspect-square object-cover" style="width:100%;height:100%;">`
           : `<span style="font-size:14px;">${song.cover||'🎵'}</span>`;
         chips.push(chip('Song', name, thumb, `openSong('${song.id}')`));
       }
       if(person){
         const name = (person.name||'').replace(/</g,'&lt;');
-        const avatarBase = (person.avatar || `Friends/${person.id||''}.jpg`).replace(/\.jpg$|\.png$/i, '');
-        const thumb = `<img src="${avatarBase}.jpg" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=function(){this.style.display='none'};this.src='${avatarBase}.png';"><i class="${person.icon||'fas fa-user'}" style="font-size:12px;margin-left:-100%"></i>`;
+        const avatarBase = (person.avatar || `Friends/${person.id||''}.jpg`).replace(/\.jpg$\vert{}\.png$/i, '');
+        const thumb = `<img src="${avatarBase}.jpg" alt="" class="aspect-square object-cover" style="width:100%;height:100%;" onerror="this.onerror=function(){this.style.display='none'};this.src='${avatarBase}.png';"><i class="${person.icon||'fas fa-user'}" style="font-size:12px;margin-left:-100%"></i>`;
         chips.push(chip('Person', name, thumb, `openPersonOverlay('${person.id}')`));
       }
       const noteHtml = b.note ? `<div class="text-xs text-[var(--text-secondary)] mb-2">${(b.note||'').replace(/</g,'&lt;')}</div>` : '';
@@ -1332,8 +1354,10 @@ function openSong(key) {
 
   const img = document.getElementById('ovCoverImg');
   const emoji = document.getElementById('ovCoverEmoji');
-  if (song.coverImg) {
-    img.src = song.coverImg;
+  const coverUrl = song.coverImg || song.cover;
+
+  if (coverUrl && typeof coverUrl === 'string' && (coverUrl.startsWith('http') || coverUrl.includes('/'))) {
+    img.src = coverUrl;
     img.classList.remove('hidden');
     emoji.classList.add('hidden');
   } else {
@@ -1346,8 +1370,8 @@ function openSong(key) {
   document.getElementById('bpArtist').textContent = song.artist;
   const bpImg = document.getElementById('bpCover');
   const bpEmoji = document.getElementById('bpEmoji');
-  if (song.coverImg) {
-    bpImg.src = song.coverImg;
+  if (coverUrl && typeof coverUrl === 'string' && (coverUrl.startsWith('http') || coverUrl.includes('/'))) {
+    bpImg.src = coverUrl;
     bpImg.classList.remove('hidden');
     bpEmoji.classList.add('hidden');
   } else {
@@ -1371,10 +1395,10 @@ function openSong(key) {
 
         const avatarHtml = person
           ? (() => {
-              const base = (person.avatar || `Friends/${c.personId}.jpg`).replace(/\.jpg$|\.png$/i, '');
-              return `<img src="${base}.jpg" alt="${displayName}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${base}.png';">`;
+              const base = (person.avatar || `Friends/${c.personId}.jpg`).replace(/\.jpg$\vert{}\.png$/i, '');
+              return `<img src="${base}.jpg" alt="${displayName}" class="w-full h-full object-cover aspect-square" onerror="this.onerror=null;this.src='${base}.png';">`;
             })()
-          : `<div class="w-full h-full flex items-center justify-center bg-white/10"><i class="fas fa-user text-xs text-white/40"></i></div>`;
+          : `<div class="w-full h-full flex items-center justify-center bg-white/10 aspect-square"><i class="fas fa-user text-xs text-white/40"></i></div>`;
 
         const nameHtml = person
           ? `<button type="button" onclick="closeOverlay(); setTimeout(function(){ openPersonOverlay('${c.personId}') }, 250)" class="text-sm font-semibold text-white hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1 truncate">${displayName}<i class="fas fa-arrow-up-right-from-square text-[9px] opacity-60"></i></button>`
@@ -1382,7 +1406,7 @@ function openSong(key) {
 
         return `
         <div class="flex items-center gap-3 w-full py-1.5 px-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10 bg-gradient-to-br from-[#A596DA]/30 to-[#6B5C9B]/15">${avatarHtml}</div>
+          <div class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10 bg-gradient-to-br from-[#A596DA]/30 to-[#6B5C9B]/15 aspect-square">${avatarHtml}</div>
           <div class="flex-1 min-w-0 text-left">
             ${nameHtml}
             <div class="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">${c.role || ''}</div>
@@ -1506,19 +1530,23 @@ document.addEventListener('DOMContentLoaded', () => {
 function openAlbum(key) {
   const album = ALBUMS[key];
   if (!album) return;
-  document.getElementById('alCover').src = album.coverImg || '';
+  const coverUrl = album.coverImg || album.cover || '';
+  const coverEl = document.getElementById('alCover');
+  if (coverEl) coverEl.src = coverUrl;
   document.getElementById('alTitle').textContent = album.name;
   document.getElementById('alArtist').textContent = album.artist + ' • ' + album.year;
   document.getElementById('alStatus').textContent = album.status;
   const wrap = document.getElementById('alTracks');
-  wrap.innerHTML = '';
-  (album.tracklist || []).forEach((t,i)=>{
-    const d = document.createElement('div');
-    d.className = 'flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition cursor-pointer';
-    if (t.key && SONGS[t.key]) d.onclick = () => { closeAlbum(); openSong(t.key); };
-    d.innerHTML = `<div class="w-6 text-sm text-[var(--text-secondary)]">${i+1}</div><div class="flex-1">${t.name}</div><div class="text-xs font-mono text-[var(--text-secondary)]">${t.duration}</div>`;
-    wrap.appendChild(d);
-  });
+  if (wrap) {
+    wrap.innerHTML = '';
+    (album.tracklist || []).forEach((t,i)=>{
+      const d = document.createElement('div');
+      d.className = 'flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition cursor-pointer';
+      if (t.key && SONGS[t.key]) d.onclick = () => { closeAlbum(); openSong(t.key); };
+      d.innerHTML = `<div class="w-6 text-sm text-[var(--text-secondary)]">${i+1}</div><div class="flex-1">${t.name}</div><div class="text-xs font-mono text-[var(--text-secondary)]">${t.duration || ''}</div>`;
+      wrap.appendChild(d);
+    });
+  }
   document.getElementById('albumOverlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
