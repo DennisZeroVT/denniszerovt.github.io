@@ -35,20 +35,60 @@ const SITE_SONGS = [
     "title": "Dont lose sight",
     "artist": "DennisZeroVT",
     "year": 2026,
-    "status": "Announced",
-    "genres": ["Pop", "Rock"],
-    "coverEmoji": "",
-    "badges": [{ "label": "Announced", "color": "#3B82F6" }],
-    "streaming": { "spotify": "", "apple": "", "tidal": "", "youtube": "", "amazon": "", "deezer": "" },
-    "blocks": [
-      { "type": "text", "heading": "Why it was made ", "content": "I made this song as a sort of showcase how much i improved \n\neven tho i original planned to over throw stuck in time whice ironicly i did top it  but not by a lot but its so much better mix and master wise \n\n" },
-      { "type": "divider" },
-      { "type": "text", "heading": "Theme ", "content": "The irony is that i wanted for the first time a happy and inspiration song whice worked  really well" },
-      { "type": "divider" },
-      { "type": "image", "src": "https://denniszerovt.github.io/images/posts/1787264077248-1000069525.jpg", "caption": "The project  (the biggest project file i made yet)" }
+    "status": "Released",
+    "genres": [
+      "Pop",
+      "Rock"
     ],
-    "credits": [{ "role": "Druns", "name": "Kula", "personId": "kula" }],
-    "about": "", "thoughts": "", "miscellaneous": "", "behindTheScenes": "",
+    "coverEmoji": "🎵",
+    "badges": [
+      {
+        "label": "Released",
+        "color": "#10B981"
+      }
+    ],
+    "streaming": {
+      "spotify": "https://open.spotify.com/artist/1sDYqTh1SQNJksxNAXbxyS",
+      "apple": "https://music.apple.com/nl/artist/denniszerovt/1840250778",
+      "tidal": "https://tidal.com/artist/66966649",
+      "amazon": "https://music.amazon.com/artists/B0FNKV8PTN/denniszerovt",
+      "deezer": "https://www.deezer.com/en/artist/342624221",
+      "youtube": "https://youtube.com/@denniszerovt"
+    },
+    "blocks": [
+      {
+        "type": "text",
+        "heading": "Why it was made ",
+        "content": "I made this song as a sort of showcase how much i improved \n\neven tho i original planned to over throw stuck in time whice ironicly i did top it  but not by a lot but its so much better mix and master wise \n\n"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "text",
+        "heading": "Theme ",
+        "content": "The irony is that i wanted for the first time a happy and inspiration song whice worked  really well"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "image",
+        "src": "https://denniszerovt.github.io/images/posts/1787264077248-1000069525.jpg",
+        "caption": "The project  (the biggest project file i made yet)"
+      }
+    ],
+    "credits": [
+      {
+        "role": "Druns",
+        "name": "Kula",
+        "personId": "kula"
+      }
+    ],
+    "about": "",
+    "thoughts": "",
+    "miscellaneous": "",
+    "behindTheScenes": "",
     "cover": "https://denniszerovt.github.io/SongData/AlbumArt/1787263742565-1000069524.jpg",
     "audio": "https://denniszerovt.github.io/SongData/Songs/1787263769590-Don't-Your-Sight-(final).mp3"
   },
@@ -58,18 +98,49 @@ const SITE_SONGS = [
     "artist": "DennisZeroVT",
     "year": 2026,
     "status": "Released",
-    "genres": ["Electronic", "Orchestral"],
+    "genres": [
+      "Electronic",
+      "Orchestral"
+    ],
     "coverEmoji": "🎵",
     "badges": [
-      { "label": "Released", "color": "#10B981" },
-      { "label": "Spotify", "color": "#1DB954" },
-      { "label": "Apple Music", "color": "#FA243C" },
-      { "label": "Tidal", "color": "#000000" },
-      { "label": "Amazon", "color": "#FF9900" },
-      { "label": "YouTube Music", "color": "#FF0000" },
-      { "label": "Deezer", "color": "#FEAA2D" }
+      {
+        "label": "Released",
+        "color": "#10B981"
+      },
+      {
+        "label": "Spotify",
+        "color": "#1DB954"
+      },
+      {
+        "label": "Apple Music",
+        "color": "#FA243C"
+      },
+      {
+        "label": "Tidal",
+        "color": "#000000"
+      },
+      {
+        "label": "Amazon",
+        "color": "#FF9900"
+      },
+      {
+        "label": "YouTube Music",
+        "color": "#FF0000"
+      },
+      {
+        "label": "Deezer",
+        "color": "#FEAA2D"
+      }
     ],
-    "streaming": { "spotify": "", "apple": "", "tidal": "", "youtube": "", "amazon": "", "deezer": "" },
+    "streaming": {
+      "spotify": "",
+      "apple": "",
+      "tidal": "",
+      "youtube": "",
+      "amazon": "",
+      "deezer": ""
+    },
     "about": "Adrenaline is the third remake of an old song I wrote 2 years ago with the same name.\nI wanted to make the final version to show that I have improved as a music producer.",
     "thoughts": "The song uses a lot of FM instruments and Genesis SoundFonts for some elements. The trumpet has a harmony now, and there are a lot of key changes.",
     "miscellaneous": "I brought back Kula for the drums. We actually had two drum takes — one was a draft and the last one was the final one. Again, he did a great job. I really love the energy of the descending harmony chorus.",
@@ -77,15 +148,49 @@ const SITE_SONGS = [
     "cover": "https://denniszerovt.github.io/SongData/AlbumArt/1781376777984-andrenaline.png",
     "audio": "https://denniszerovt.github.io/SongData/Songs/1781377044884-adrenaline-final-mix.mp3",
     "blocks": [
-      { "type": "text", "heading": "About", "content": "Adrenaline is the third remake of an old song I wrote 2 years ago with the same name.\nI wanted to make the final version to show that I have improved as a music producer.\n" },
-      { "type": "text", "heading": "Thoughts", "content": "The song uses a lot of FM instruments and Genesis SoundFonts for some elements. The trumpet has a harmony now, and there are a lot of key changes." },
-      { "type": "text", "heading": "Behind the Scenes", "content": "I brought back Kula for the drums. We actually had two drum takes — one was a draft and the last one was the final one. Again, he did a great job. I really love the energy of the descending harmony chorus." },
-      { "type": "divider" },
-      { "type": "text", "heading": "version history", "content": "here shows the history of this song" },
-      { "type": "video", "src": "", "url": "https://www.youtube.com/watch?v=MBxLK-FmkI0", "caption": "second remaster" },
-      { "type": "video", "src": "", "url": "https://www.youtube.com/watch?v=CEEKVptauro", "caption": "original" }
+      {
+        "type": "text",
+        "heading": "About",
+        "content": "Adrenaline is the third remake of an old song I wrote 2 years ago with the same name.\nI wanted to make the final version to show that I have improved as a music producer.\n"
+      },
+      {
+        "type": "text",
+        "heading": "Thoughts",
+        "content": "The song uses a lot of FM instruments and Genesis SoundFonts for some elements. The trumpet has a harmony now, and there are a lot of key changes."
+      },
+      {
+        "type": "text",
+        "heading": "Behind the Scenes",
+        "content": "I brought back Kula for the drums. We actually had two drum takes — one was a draft and the last one was the final one. Again, he did a great job. I really love the energy of the descending harmony chorus."
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "text",
+        "heading": "version history",
+        "content": "here shows the history of this song"
+      },
+      {
+        "type": "video",
+        "src": "",
+        "url": "https://www.youtube.com/watch?v=MBxLK-FmkI0",
+        "caption": "second remaster"
+      },
+      {
+        "type": "video",
+        "src": "",
+        "url": "https://www.youtube.com/watch?v=CEEKVptauro",
+        "caption": "original"
+      }
     ],
-    "credits": [{ "role": "Drums", "name": "Kula", "personId": "kula" }]
+    "credits": [
+      {
+        "role": "Drums",
+        "name": "Kula",
+        "personId": "kula"
+      }
+    ]
   },
   {
     "id": "snowfall",
@@ -93,18 +198,42 @@ const SITE_SONGS = [
     "artist": "DennisZeroVT",
     "year": "2025",
     "status": "Released",
-    "genres": ["Ambient", "Lo-fi"],
+    "genres": [
+      "Ambient",
+      "Lo-fi"
+    ],
     "audio": "SongData/Songs/snowfall.mp3",
     "cover": "SongData/AlbumArt/snowfall.png",
     "coverEmoji": "🌨️",
     "badges": [
-      { "label": "Released", "color": "#10B981" },
-      { "label": "Spotify", "color": "#1DB954" },
-      { "label": "Apple Music", "color": "#FA243C" },
-      { "label": "Tidal", "color": "#000000" },
-      { "label": "Amazon", "color": "#FF9900" },
-      { "label": "YouTube Music", "color": "#FF0000" },
-      { "label": "Deezer", "color": "#FEAA2D" }
+      {
+        "label": "Released",
+        "color": "#10B981"
+      },
+      {
+        "label": "Spotify",
+        "color": "#1DB954"
+      },
+      {
+        "label": "Apple Music",
+        "color": "#FA243C"
+      },
+      {
+        "label": "Tidal",
+        "color": "#000000"
+      },
+      {
+        "label": "Amazon",
+        "color": "#FF9900"
+      },
+      {
+        "label": "YouTube Music",
+        "color": "#FF0000"
+      },
+      {
+        "label": "Deezer",
+        "color": "#FEAA2D"
+      }
     ],
     "streaming": {
       "spotify": "https://open.spotify.com/track/0TxrNlfNSlwuncbt0wpVH6?utm_source=generator",
@@ -118,7 +247,13 @@ const SITE_SONGS = [
     "thoughts": "This was the first time I ever wrote lyrics for a song. I didn't plan it that way — I just wanted to make something for Erik and the words came naturally. I remember sitting with the melody for a long time before anything clicked. When it finally did, it felt like the song wrote itself.",
     "miscellaneous": "The track is the first song I ever released. It was released on Spotify in 2025",
     "behindTheScenes": "I was using Studio One at the time. The arrangement started with just a piano line and some light percussion. The winter atmosphere came from layered pads and a lot of reverb on everything. I wanted it to feel like you were standing outside in the cold, watching snow fall slowly — calm but a little melancholic.",
-    "credits": [{ "role": "Inspiration", "name": "Erik", "personId": "erik" }]
+    "credits": [
+      {
+        "role": "Inspiration",
+        "name": "Erik",
+        "personId": "erik"
+      }
+    ]
   },
   {
     "id": "stuck_in_time",
@@ -126,18 +261,42 @@ const SITE_SONGS = [
     "artist": "DennisZeroVT",
     "year": "2026",
     "status": "Released",
-    "genres": ["Rock", "Alternative"],
+    "genres": [
+      "Rock",
+      "Alternative"
+    ],
     "audio": "SongData/Songs/stuckintime.mp3",
     "cover": "SongData/AlbumArt/stuckintime.png",
     "coverEmoji": "🕒",
     "badges": [
-      { "label": "Released", "color": "#10B981" },
-      { "label": "Spotify", "color": "#1DB954" },
-      { "label": "Apple Music", "color": "#FA243C" },
-      { "label": "Tidal", "color": "#000000" },
-      { "label": "Amazon", "color": "#FF9900" },
-      { "label": "YouTube Music", "color": "#FF0000" },
-      { "label": "Deezer", "color": "#FEAA2D" }
+      {
+        "label": "Released",
+        "color": "#10B981"
+      },
+      {
+        "label": "Spotify",
+        "color": "#1DB954"
+      },
+      {
+        "label": "Apple Music",
+        "color": "#FA243C"
+      },
+      {
+        "label": "Tidal",
+        "color": "#000000"
+      },
+      {
+        "label": "Amazon",
+        "color": "#FF9900"
+      },
+      {
+        "label": "YouTube Music",
+        "color": "#FF0000"
+      },
+      {
+        "label": "Deezer",
+        "color": "#FEAA2D"
+      }
     ],
     "streaming": {
       "spotify": "https://open.spotify.com/track/1UNqmaIFQVQia3Ogxtpu4x?si=994999e942f14ba4",
@@ -151,7 +310,13 @@ const SITE_SONGS = [
     "thoughts": "This song was inspired by a lot of personal experiences and conversations with friends. I wanted to capture that bittersweet feeling of nostalgia mixed with the anxiety of change. The lyrics came from a place of vulnerability, and I hope they resonate with anyone who's ever felt stuck in a moment they can't escape.",
     "miscellaneous": "the harmonies in the song is sang by me its actualy one of the first time i used my own voice in my song.",
     "behindTheScenes": "i went back in cubase for this one. The drums were recorded live by my friend Kula i met during an idol group project, which added a lot of energy to the track. I built the produced the song to finish and i send the mockup drums to kula and told him you can put your own spin to the drums and he killed it, like i put a half time section in it before the key change and he went insane on the half time section and his drums conbined with my guitars and the song just came alive, it was a really fun process and i hope to work with him again in the future.",
-    "credits": [{ "role": "Drums", "name": "Kula", "personId": "kula" }]
+    "credits": [
+      {
+        "role": "Drums",
+        "name": "Kula",
+        "personId": "kula"
+      }
+    ]
   }
 ];
 
