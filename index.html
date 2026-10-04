@@ -47,7 +47,6 @@
 </style>
 
 <!-- Third-party assets -->
-<script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -1419,6 +1418,91 @@ nav .w-10.h-10, #mobile-menu .w-10.h-10 { border-radius: 4px !important; }
   }
 
   .gradient-text { background-clip: text; }
+}
+</style>
+
+<link rel="stylesheet" href="tailwind.css"/>
+<style id="flat-solid">
+/* ============================================================
+   FLAT / SOLID THEME  (Firefox-friendly)
+   No backdrop-filter, no glow/box-shadow, no fixed bg image,
+   no infinite animations. Opaque surfaces + crisp borders.
+   ============================================================ */
+:root{
+  --bg-main:#0f0c18; --bg-card:#171223; --bg-card-hover:#1e1830;
+  --surface:#171223; --surface-2:#1e1830;
+  --line:#2d2542; --line-hover:#6f5fb0;
+  --accent:#A596DA; --accent-soft:#C4B5FD;
+}
+html{scroll-behavior:smooth}
+*{scroll-behavior:auto}
+*,*::before,*::after{box-shadow:none!important;text-shadow:none!important}
+::selection{background:#A596DA;color:#0f0c18}
+
+/* background: one flat colour, nothing fixed or full-viewport to repaint */
+body,body.optimized{background:var(--bg-main)!important;background-image:none!important}
+body::after,body.optimized::after{display:none!important}
+
+/* every blur off, everywhere */
+*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* surfaces */
+.glass,.people-grid .person-card,.song-row,.home-stat,.view-toggle,
+#songs-grid .group,#albums-grid .group,.blog-search input,.blog-select,
+.genre-pill-btn,#mobile-menu,#hq-toast{
+  background:var(--surface)!important;
+  border:1px solid var(--line)!important;
+}
+nav.glass{background:#120e1d!important;border-width:0 0 1px 0!important}
+footer.glass{background:#120e1d!important;border-width:1px 0 0 0!important}
+.home-stats{background:var(--line)!important;border-color:var(--line)!important}
+.home-stat{border:0!important}
+.gradient-border::before{display:none!important}
+
+/* overlays: solid dim instead of blur */
+.overlay,#songOverlay>.absolute.inset-0,#albumOverlay>.absolute.inset-0,#mobile-menu-overlay{
+  background:rgba(7,5,12,.92)!important}
+#songOverlayGlass,#albumOverlay .glass,.overlay-content{background:#14101f!important}
+.song-year-badge{background:#0f0c18!important}
+
+/* hover: border + small lift only (compositor-cheap), no glow */
+.glow-hover:hover,.people-grid .person-card:hover,.song-row:hover,.nav-pill:hover{
+  border-color:var(--line-hover)!important}
+.glow-hover:hover,.people-grid .person-card:hover{transform:translateY(-2px)!important}
+.person-card:hover,.song-card:hover{transform:none}
+.glow-hover,.person-card,.song-card,.song-row,.nav-pill,.transition-all{
+  transition:transform .18s ease,border-color .18s ease,background-color .18s ease,color .18s ease!important}
+
+/* gradients -> solid accent */
+.gradient-text{background:none!important;-webkit-text-fill-color:currentColor!important;color:var(--accent-soft)!important}
+.from-\[\#A596DA\]{background-image:none!important;background-color:var(--accent)!important}
+.from-\[\#1a1a1a\],.from-\[\#2a2a2a\]{background-image:none!important;background-color:var(--surface-2)!important}
+.nav-pill.active,#mobile-menu a.active,.person-social-btn{background:var(--accent)!important;background-image:none!important;color:#0f0c18!important}
+.nav-pill{background:transparent!important}
+.nav-pill:hover{background:var(--surface-2)!important}
+.nav-pill.active:hover{background:var(--accent-soft)!important}
+.person-banner{background:#241c3a!important}
+.person-banner::after{display:none!important}
+.person-banner-bg{background:#241c3a!important}
+.person-avatar-ring{background:var(--surface-2)!important;border-color:var(--surface)!important}
+.person-card-body{padding-top:48px}
+
+/* motion: stop everything that runs forever */
+.animate-pulse,.floating,.music-bar{animation:none!important}
+main,.blog-post.active{animation:none!important}
+html.js main>section.active{animation:fadeIn .2s ease!important}
+.group-hover\:scale-105{transform:none!important}
+
+/* type polish */
+h1,h2,h3{letter-spacing:-.01em}
+.title-header p{letter-spacing:.02em}
+.blog-sidebar-title,.info-footer-label{letter-spacing:.1em}
+
+/* HQ/LQ toggle no longer does anything visible */
+#hq-toggle{display:none!important}
+
+@-moz-document url-prefix(){
+  *{scrollbar-width:thin;scrollbar-color:#4b4070 transparent}
 }
 </style>
 
