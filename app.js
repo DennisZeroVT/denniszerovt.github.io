@@ -502,6 +502,39 @@ const SITE_POSTS = [
 
 /* =========================== END OF SITE CONTENT =========================== */
 
+/* ---- Socials for friends / collabs: accepts @handle, handle, or a full link ---- */
+const SOCIAL_META = {
+  twitter:   { label: 'X / Twitter', icon: 'fab fa-x-twitter', base: 'https://x.com/' },
+  twitch:    { label: 'Twitch',      icon: 'fab fa-twitch',    base: 'https://twitch.tv/' },
+  youtube:   { label: 'YouTube',     icon: 'fab fa-youtube',   base: 'https://youtube.com/@' },
+  instagram: { label: 'Instagram',   icon: 'fab fa-instagram', base: 'https://instagram.com/' },
+  spotify:   { label: 'Spotify',     icon: 'fab fa-spotify',   base: null },
+  website:   { label: 'Website',     icon: 'fas fa-globe',     base: null }
+};
+const SOCIAL_ORDER = ['twitter','twitch','youtube','instagram','spotify','website'];
+function socialUrl(kind, value){
+  let v = String(value == null ? '' : value).trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (kind === 'website') return 'https://' + v.replace(/^\/+/, '');
+  if (/^(www\.|m\.)?(x\.com|twitter\.com|twitch\.tv|youtube\.com|youtu\.be|instagram\.com|open\.spotify\.com)/i.test(v)) return 'https://' + v;
+  const m = SOCIAL_META[kind];
+  if (!m || !m.base) return 'https://' + v;
+  v = v.replace(/^@/, '');
+  if (kind === 'youtube' && /^UC[\w-]{20,}$/.test(v)) return 'https://youtube.com/channel/' + v;
+  return m.base + v;
+}
+function personSocials(links){
+  links = links || {};
+  const keys = SOCIAL_ORDER.concat(Object.keys(links).filter(k => !SOCIAL_ORDER.includes(k)));
+  return keys.map(k => {
+    const url = socialUrl(k, links[k]);
+    if (!url) return null;
+    const m = SOCIAL_META[k] || { label: k.charAt(0).toUpperCase() + k.slice(1), icon: 'fas fa-link' };
+    return { key: k, name: m.label, icon: m.icon, url };
+  }).filter(Boolean);
+}
+
 function initSiteData() {
   SONGS = Object.fromEntries(SITE_SONGS.map(s => [s.id, {
     id: s.id,
@@ -532,11 +565,7 @@ function initSiteData() {
     icon: p.icon || 'fas fa-user',
     bio: p.bio,
     credits: p.credits || [],
-    links: Object.entries(p.links || {}).filter(([,v]) => v).map(([k,v]) => ({
-      name: k.charAt(0).toUpperCase() + k.slice(1),
-      icon: `fab fa-${k}`,
-      url: v
-    })),
+    links: personSocials(p.links),
     projects: p.projects || []
   }]));
 
@@ -964,7 +993,7 @@ function renderPeople(peopleList) {
         <p class="person-card-bio">${(p.bio || '')}</p>
         ${collabChips ? `<div class="person-card-chips">${collabChips}</div>` : ''}
         <div class="person-card-footer">
-          ${twitter ? `<a href="${twitter}" target="_blank" onclick="event.stopPropagation()" class="person-social-btn"><i class="fab fa-x-twitter"></i> Twitter</a>` : ''}
+          ${personSocials(p.links).map(l => `<a href="${l.url}" target="_blank" rel="noopener" title="${l.name}" aria-label="${l.name}" onclick="event.stopPropagation()" class="person-link-btn"><i class="${l.icon}"></i></a>`).join('')}
           <span class="person-social-btn" style="background:transparent;border:1px solid rgba(165,150,218,0.35);color:var(--accent);margin-left:auto;">View <i class="fas fa-arrow-right" style="font-size:10px"></i></span>
         </div>
       </div>`;
@@ -1060,7 +1089,7 @@ window.openPersonOverlay = function(personId) {
     linksHTML = `
     <div class="flex gap-4">
         ${links.map(l => `
-            <a href="${l.url}" target="_blank" class="w-12 h-12 rounded-lg glass flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors" onclick="event.stopPropagation()">
+            <a href="${l.url}" target="_blank" rel="noopener" title="${l.name}" aria-label="${l.name}" class="w-12 h-12 rounded-lg glass flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors" onclick="event.stopPropagation()">
                 <i class="${l.icon} text-xl"></i>
             </a>
         `).join('')}
@@ -1483,6 +1512,7 @@ function openSong(key) {
           <div class="flex-1 min-w-0 text-left">
             ${nameHtml}
             <div class="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">${c.role || ''}</div>
+            ${person && (person.links||[]).length ? `<div style="margin-top:4px;display:flex;gap:10px">${person.links.map(l => `<a href="${l.url}" target="_blank" rel="noopener" title="${l.name}" aria-label="${l.name}" style="font-size:11px" class="text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"><i class="${l.icon}"></i></a>`).join('')}</div>` : ''}
           </div>
         </div>`;
       }).join('');

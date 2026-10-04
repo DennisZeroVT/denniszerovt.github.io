@@ -1319,9 +1319,9 @@ function renderPeopleEditor(p){
         <div class="hint" style="margin-top:6px">Each credit links this person to a specific song with their exact contribution.</div>
       </div>
 
-      <div class="field full"><label>Links</label>
+      <div class="field full"><label>Socials <span class="hint">· paste a @handle or a full link. Leave empty to hide.</span></label>
         <div class="links-grid">
-          ${['twitter','spotify','instagram','website'].map(k=>`<div><label class="hint">${k}</label><input id="p_${k}" value="${esc(p.links?.[k]||'')}"></div>`).join('')}
+          ${SOCIAL_ORDER.map(k=>`<div><label class="hint"><i class="${SOCIAL_META[k].icon}"></i> ${SOCIAL_META[k].label}</label><input id="p_${k}" placeholder="${k==='website'?'example.com':k==='spotify'?'artist link':'@handle or link'}" value="${esc(p.links?.[k]||'')}"></div>`).join('')}
         </div>
       </div>
     </div>
@@ -1393,6 +1393,39 @@ function renderPeopleEditor(p){
   };
 }
 
+/* ---- Socials for friends / collabs: accepts @handle, handle, or a full link ---- */
+const SOCIAL_META = {
+  twitter:   { label: 'X / Twitter', icon: 'fab fa-x-twitter', base: 'https://x.com/' },
+  twitch:    { label: 'Twitch',      icon: 'fab fa-twitch',    base: 'https://twitch.tv/' },
+  youtube:   { label: 'YouTube',     icon: 'fab fa-youtube',   base: 'https://youtube.com/@' },
+  instagram: { label: 'Instagram',   icon: 'fab fa-instagram', base: 'https://instagram.com/' },
+  spotify:   { label: 'Spotify',     icon: 'fab fa-spotify',   base: null },
+  website:   { label: 'Website',     icon: 'fas fa-globe',     base: null }
+};
+const SOCIAL_ORDER = ['twitter','twitch','youtube','instagram','spotify','website'];
+function socialUrl(kind, value){
+  let v = String(value == null ? '' : value).trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (kind === 'website') return 'https://' + v.replace(/^\/+/, '');
+  if (/^(www\.|m\.)?(x\.com|twitter\.com|twitch\.tv|youtube\.com|youtu\.be|instagram\.com|open\.spotify\.com)/i.test(v)) return 'https://' + v;
+  const m = SOCIAL_META[kind];
+  if (!m || !m.base) return 'https://' + v;
+  v = v.replace(/^@/, '');
+  if (kind === 'youtube' && /^UC[\w-]{20,}$/.test(v)) return 'https://youtube.com/channel/' + v;
+  return m.base + v;
+}
+function personSocials(links){
+  links = links || {};
+  const keys = SOCIAL_ORDER.concat(Object.keys(links).filter(k => !SOCIAL_ORDER.includes(k)));
+  return keys.map(k => {
+    const url = socialUrl(k, links[k]);
+    if (!url) return null;
+    const m = SOCIAL_META[k] || { label: k.charAt(0).toUpperCase() + k.slice(1), icon: 'fas fa-link' };
+    return { key: k, name: m.label, icon: m.icon, url };
+  }).filter(Boolean);
+}
+
 async function savePerson(){
   const p = getCurrentItem(); if (!p) return;
   p.name    = $('#p_name').value.trim();
@@ -1408,12 +1441,8 @@ async function savePerson(){
   p.showOnHome = $('#p_home').checked;
   p.credits = p.credits || [];
   p.projects = p.credits.map(c => c.song).filter(Boolean);
-  p.links = {
-    twitter:   $('#p_twitter').value,
-    spotify:   $('#p_spotify').value,
-    instagram: $('#p_instagram').value,
-    website:   $('#p_website').value
-  };
+  p.links = {};
+  SOCIAL_ORDER.forEach(k => { const v = socialUrl(k, $('#p_'+k).value); if (v) p.links[k] = v; });
   p.id = p.id || slugify(p.name);
   try {
     setStatus('Saving person…','work');
