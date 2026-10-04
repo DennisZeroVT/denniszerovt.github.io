@@ -386,7 +386,7 @@ function renderHome(){
       html += `
       <div class="glass rounded-2xl p-6 flex items-center gap-5 glow-hover cursor-pointer" onclick="document.querySelector('[data-page=music]').click(); setTimeout(()=>openSong('${latestSong.id}'), 250)">
         <div class="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-[#2a2a2a] to-[#0f0f0f] flex-shrink-0 flex items-center justify-center text-3xl">
-          ${latestSong.cover ? `<img src="${latestSong.cover}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : (latestSong.coverEmoji || '🎵')}
+          ${latestSong.cover ? `<img loading="lazy" decoding="async" src="${latestSong.cover}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : (latestSong.coverEmoji || '🎵')}
         </div>
         <div class="min-w-0">
           <div class="text-xs uppercase tracking-wider text-[var(--accent)] font-semibold mb-1">Latest Release</div>
@@ -587,7 +587,7 @@ function renderSongsGrid() {
       return `
       <div id="song-${key}" class="song-row glass" onclick="openSong('${key}')">
         <div class="song-row-thumb">
-          ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" onerror="this.style.display='none'">` : (song.cover||'🎵')}
+          ${song.coverImg ? `<img loading="lazy" decoding="async" src="${song.coverImg}" alt="${song.name}" onerror="this.style.display='none'">` : (song.cover||'🎵')}
         </div>
         <div class="flex-1 min-w-0">
           <div class="font-semibold text-white truncate">${song.name}</div>
@@ -620,7 +620,7 @@ function renderSongsGrid() {
     <div id="song-${key}" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('${key}')">
         <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
             ${song.year ? `<span class="song-year-badge">${song.year}</span>` : ''}
-            ${song.coverImg ? `<img src="${song.coverImg}" alt="${song.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
+            ${song.coverImg ? `<img loading="lazy" decoding="async" src="${song.coverImg}" alt="${song.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
             <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">${song.cover || '🎵'}</div>
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
                 <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
@@ -646,7 +646,7 @@ function renderAlbumsGrid() {
     return `
     <div class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openAlbum('${key}')">
         <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
-            ${album.coverImg ? `<img src="${album.coverImg}" alt="${album.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
+            ${album.coverImg ? `<img loading="lazy" decoding="async" src="${album.coverImg}" alt="${album.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60"></div>
             <div class="absolute bottom-3 left-3">
                 <span class="px-2 py-1 rounded-full bg-[#A596DA]/20 text-[#A596DA] text-[10px] font-medium backdrop-blur">${album.status || ''}</span>
@@ -692,7 +692,7 @@ function renderPeople(peopleList) {
     card.innerHTML = `
       <div class="person-banner">
         <div class="person-avatar-ring">
-          <img src="${tryJpg}" alt="${p.name}" onerror="this.onerror=null; this.src='${tryPng}';">
+          <img loading="lazy" decoding="async" src="${tryJpg}" alt="${p.name}" onerror="this.onerror=null; this.src='${tryPng}';">
         </div>
       </div>
       <div class="person-card-body">
@@ -740,7 +740,7 @@ window.openPersonOverlay = function(personId) {
 
   header.innerHTML = `
       <div class="w-16 h-16 rounded-full bg-gradient-to-br ${person.color} flex items-center justify-center overflow-hidden flex-shrink-0 relative">
-          <img src="${tryJpg}" alt="${person.name}" class="w-full h-full object-cover" onerror="this.onerror=function(){this.style.display='none'}; this.src='${tryPng}';">
+          <img loading="lazy" decoding="async" src="${tryJpg}" alt="${person.name}" class="w-full h-full object-cover" onerror="this.onerror=function(){this.style.display='none'}; this.src='${tryPng}';">
           <i class="${person.icon} text-2xl absolute" style="z-index:-1"></i>
       </div>
       <div>
@@ -833,7 +833,7 @@ function renderContentBlocks(blocks, accentColor){
   return blocks.map(b => {
     if(b.type === 'image' && b.src){
       const cap = b.caption ? `<div class="text-xs text-[var(--text-secondary)] mt-2">${(b.caption||'').replace(/</g,'&lt;')}</div>` : '';
-      return `<div class="mb-5"><img src="${b.src}" class="w-full rounded-xl border border-white/10 cursor-pointer hover:opacity-95 transition" style="max-height:700px;object-fit:contain;background:#08050f" onclick="window.open('${b.src}','_blank')">${cap}</div>`;
+      return `<div class="mb-5"><img loading="lazy" decoding="async" src="${b.src}" class="w-full rounded-xl border border-white/10 cursor-pointer hover:opacity-95 transition" style="max-height:700px;object-fit:contain;background:#08050f" onclick="window.open('${b.src}','_blank')">${cap}</div>`;
     }
     if(b.type === 'text'){
       const txt = (b.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -871,14 +871,14 @@ function renderContentBlocks(blocks, accentColor){
       if(song){
         const name = (song.name||'').replace(/</g,'&lt;');
         const thumb = song.coverImg
-          ? `<img src="${song.coverImg}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+          ? `<img loading="lazy" decoding="async" src="${song.coverImg}" alt="" style="width:100%;height:100%;object-fit:cover;">`
           : `<span style="font-size:14px;">${song.cover||'🎵'}</span>`;
         chips.push(chip('Song', name, thumb, `openSong('${song.id}')`));
       }
       if(person){
         const name = (person.name||'').replace(/</g,'&lt;');
         const avatarBase = (person.avatar || `Friends/${person.id||''}.jpg`).replace(/\.jpg$|\.png$/i, '');
-        const thumb = `<img src="${avatarBase}.jpg" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=function(){this.style.display='none'};this.src='${avatarBase}.png';"><i class="${person.icon||'fas fa-user'}" style="font-size:12px;margin-left:-100%"></i>`;
+        const thumb = `<img loading="lazy" decoding="async" src="${avatarBase}.jpg" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=function(){this.style.display='none'};this.src='${avatarBase}.png';"><i class="${person.icon||'fas fa-user'}" style="font-size:12px;margin-left:-100%"></i>`;
         chips.push(chip('Person', name, thumb, `openPersonOverlay('${person.id}')`));
       }
       const noteHtml = b.note ? `<div class="text-xs text-[var(--text-secondary)] mb-2">${(b.note||'').replace(/</g,'&lt;')}</div>` : '';
@@ -1039,9 +1039,9 @@ function renderPosts(){
     const blocksHtml = renderContentBlocks(post.blocks, col);
     const imgs = post.images || [];
     const imgHtml = imgs.length === 1
-      ? `<div class="mb-6"><img src="${imgs[0]}" class="max-w-full rounded-xl border border-white/10 mx-auto cursor-pointer" style="max-height:500px" onclick="window.open('${imgs[0]}')"></div>`
+      ? `<div class="mb-6"><img loading="lazy" decoding="async" src="${imgs[0]}" class="max-w-full rounded-xl border border-white/10 mx-auto cursor-pointer" style="max-height:500px" onclick="window.open('${imgs[0]}')"></div>`
       : imgs.length > 1
-        ? `<div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">${imgs.map(i=>`<img src="${i}" class="w-full h-48 object-cover rounded-lg border border-white/10 cursor-pointer" onclick="window.open('${i}')">`).join('')}</div>`
+        ? `<div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">${imgs.map(i=>`<img loading="lazy" decoding="async" src="${i}" class="w-full h-48 object-cover rounded-lg border border-white/10 cursor-pointer" onclick="window.open('${i}')">`).join('')}</div>`
         : '';
     const legacyHtml = `<p class="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap mb-4">${(post.body||'').replace(/</g,'&lt;')}</p>${imgHtml}`;
 
@@ -1207,7 +1207,7 @@ function openSong(key) {
         const avatarHtml = person
           ? (() => {
               const base = (person.avatar || `Friends/${c.personId}.jpg`).replace(/\.jpg$|\.png$/i, '');
-              return `<img src="${base}.jpg" alt="${displayName}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${base}.png';">`;
+              return `<img loading="lazy" decoding="async" src="${base}.jpg" alt="${displayName}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='${base}.png';">`;
             })()
           : `<div class="w-full h-full flex items-center justify-center bg-white/10"><i class="fas fa-user text-xs text-white/40"></i></div>`;
 

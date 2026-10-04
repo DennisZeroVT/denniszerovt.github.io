@@ -396,7 +396,7 @@ body{background-color:#0d0b14!important;background-image:radial-gradient(900px 5
       <button class="tab" data-tab="albums">ALBUMS</button>
     </nav>
     <div class="connect">
-      <input id="token" type="password" placeholder="GitHub token (ghp_...)" autocomplete="off">
+      <input id="token" type="hidden">
       <button id="btnConnect" class="btn primary">Connect</button>
     </div>
   </header>
@@ -494,7 +494,7 @@ const FALLBACK_ALBUMS = [
 ];
 
 const state = {
-  token: localStorage.getItem('dzcms_token')||'',
+  token:'',
   connected:false,
   shas:{},
   data:{ posts:[], songs:[], people:[], albums:[], categories:[] },
@@ -722,7 +722,7 @@ function migratePosts(posts){
 
 async function connect(){
   if(!state.token){ alert('Enter GitHub token'); return }
-  localStorage.setItem('dzcms_token', state.token);
+  
   setStatus('Connecting to GitHub…','work');
   try{
     const html = await getSiteHtml();
@@ -1558,10 +1558,10 @@ $('#btnNew').onclick=()=>{
   else { const id='album-'+Date.now(); arr.unshift({id,name:'New Album',artist:'DennisZeroVT',year:new Date().getFullYear(),cover:'',status:'In Progress',description:'',tracklist:[]}); state.currentId=id; }
   render();
 };
-$('#btnConnect').onclick=()=>{ state.token=$('#token').value.trim(); connect(); };
+$('#btnConnect').onclick=()=>{ if(!state.token){ window.__showLock&&window.__showLock(); return } connect(); };
 
 (function init(){
-  $('#token').value = state.token;
+  try{localStorage.removeItem('dzcms_token')}catch(e){}
   setStatus('Ready — enter token to connect');
   state.data.posts = migratePosts(FALLBACK_POSTS);
   state.data.songs = FALLBACK_SONGS;
@@ -1572,6 +1572,50 @@ $('#btnConnect').onclick=()=>{ state.token=$('#token').value.trim(); connect(); 
 })();
 </script>
 <script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("[data-product-id]");if(!a)return;e.preventDefault();var pid=a.getAttribute("data-product-id");if(pid)parent.postMessage({type:"ecto-artifact-link-click",productId:pid},"*")})})();document.addEventListener('keydown',e=>{ if(e.key==='Escape' && state.currentId) closeEditor(); });
+</script>
+
+<div id="lock" style="position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:#0d0b14;background-image:radial-gradient(900px 500px at 50% -80px,rgba(165,150,218,.2),transparent 70%)">
+  <div style="width:100%;max-width:360px;padding:28px;border:1px solid #33295a;border-radius:6px;background:linear-gradient(180deg,#1a1628,#12121b);text-align:center">
+    <div class="logo" style="margin:0 auto 14px">D</div>
+    <div style="font-weight:700;font-size:18px;margin-bottom:4px">Dennis CMS</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:18px">Enter password to unlock</div>
+    <input id="lockPw" type="password" placeholder="Password" autocomplete="off" style="text-align:center">
+    <button id="lockBtn" class="btn primary" style="width:100%;margin-top:12px">Unlock</button>
+    <div id="lockErr" style="color:var(--red);font-size:12px;min-height:16px;margin-top:10px"></div>
+  </div>
+</div>
+<script>
+/* Token is stored AES-256-GCM encrypted (key = PBKDF2-SHA256, 600k iterations of the password).
+   Format: base64( salt16 | iv12 | ciphertext+tag ). Nothing readable is in this file. */
+(function(){
+  const VAULT="mPtvj1fB4U23NZuVz8fCiZVkJBF/C3d1QER50YqXSKSP6e51oDgqtNbRilLvgW1AFaYbhaVhVzHtZ03ezEj+8xEFdw8pe8Z4k/2ftyJbDLzbL0o8";
+  const lock=document.getElementById('lock'),pw=document.getElementById('lockPw'),
+        btn=document.getElementById('lockBtn'),err=document.getElementById('lockErr');
+  async function decrypt(password){
+    const raw=Uint8Array.from(atob(VAULT),c=>c.charCodeAt(0));
+    const salt=raw.slice(0,16),iv=raw.slice(16,28),data=raw.slice(28);
+    const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+    return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,data));
+  }
+  async function go(){
+    if(!pw.value) return;
+    btn.disabled=true; btn.textContent='Unlocking…'; err.textContent='';
+    try{
+      state.token=await decrypt(pw.value);
+      pw.value=''; lock.style.display='none';
+      connect();
+    }catch(e){
+      err.textContent=(window.crypto&&crypto.subtle)?'Wrong password':'Needs https (secure context)';
+      pw.select();
+    }
+    btn.disabled=false; btn.textContent='Unlock';
+  }
+  btn.onclick=go;
+  pw.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  window.__showLock=()=>{ lock.style.display='flex'; pw.focus(); };
+  pw.focus();
+})();
 </script>
 </body>
 </html>
