@@ -338,6 +338,29 @@ const SITE_ALBUMS = [
 
 const SITE_PEOPLE = [
   {
+    "id": "person-1791128132880",
+    "name": "Sayoki",
+    "handle": "@sayoki_vt",
+    "role": "Vtuber, Mutual",
+    "avatar": "https://denniszerovt.github.io/Friends/1791128159639-8QP1ksnW_400x400.jpg",
+    "bio": "sayoki is a kind girl who was part of the failed idol group me and kula was a part of\nout of all the talents she was the only one who went on her way to contact me \nwe became good mutual and she was willing to sing for my releases in the future ",
+    "tags": [
+      "friend",
+      "collab"
+    ],
+    "links": {
+      "twitter": "sayoki_vt",
+      "spotify": "",
+      "instagram": "",
+      "website": "https://sayoki.carrd.co/"
+    },
+    "projects": [],
+    "color": "text-purple-400",
+    "icon": "👤",
+    "showOnHome": true,
+    "credits": []
+  },
+  {
     "id": "erik",
     "name": "Erik",
     "handle": "eri_k416",
