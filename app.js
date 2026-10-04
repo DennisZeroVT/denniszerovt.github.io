@@ -338,72 +338,121 @@ const SITE_ALBUMS = [
 
 const SITE_PEOPLE = [
   {
-    id: "erik",
-    name: "Erik",
-    handle: "eri_k416",
-    role: "Friend // eri_k416",
-    avatar: "Friends/erik.jpg",
-    bio: "Erik was the subject and inspiration for my debut release, Snowfall. His character Viona shaped the entire mood of the track — the wintry atmosphere, the lyrics, the melancholy. He was the reason I wrote vocals for the very first time.",
-    tags: ["friend", "collab"],
-    links: { twitter: "https://x.com/eri_k416?s=20", spotify: "https://open.spotify.com/track/0TxrNlfNSlwuncbt0wpVH6" },
-    credits: [{ song: "Snowfall", songId: "snowfall", role: "Inspiration", note: "His character Viona shaped the entire mood of the track" }],
-    color: "from-blue-500/30 to-blue-600/10",
-    icon: "fas fa-snowflake"
-  },
-  {
-    id: "kula",
-    name: "Kula",
-    handle: "@mee_yawwwwww",
-    role: "Friend, Drummer // @mee_yawwwwww",
-    avatar: "Friends/kula.jpg",
-    bio: "Kula is a musician and drummer I met during an idol group project. Even though the project eventually fell apart, we connected through music and he turned out to be a really chill guy. He mentioned wanting to be part of something, so I invited him to play drums on my single Stuck In Time. We worked well together, and I will likely ask him to handle the drums again in future projects.",
-    tags: ["friend", "collab"],
-    links: { twitter: "https://x.com/mee_yawwwwww?s=20", spotify: "", instagram: "", website: "" },
-    credits: [
-      { song: "Stuck In Time", songId: "stuck_in_time", role: "Drums", note: "" },
-      { song: "Adrenaline", songId: "adrenaline", role: "Drums", note: "" }
+    "id": "erik",
+    "name": "Erik",
+    "handle": "eri_k416",
+    "role": "Friend // eri_k416",
+    "avatar": "Friends/erik.jpg",
+    "bio": "Erik is the second best friend i discovered in my second discord server we have played minecraft and terreria together and became close friends",
+    "tags": [
+      "friend",
+      "collab"
     ],
-    color: "from-[#A596DA]/30 to-[#8B78CB]/10",
-    icon: "fas fa-drum"
+    "links": {
+      "twitter": "https://x.com/eri_k416?s=20",
+      "spotify": "https://open.spotify.com/track/0TxrNlfNSlwuncbt0wpVH6",
+      "instagram": "",
+      "website": ""
+    },
+    "credits": [
+      {
+        "song": "Snowfall",
+        "songId": "snowfall",
+        "role": "Inspiration",
+        "note": "His character Viona shaped the entire mood of the track"
+      }
+    ],
+    "color": "from-blue-500/30 to-blue-600/10",
+    "icon": "fas fa-snowflake",
+    "showOnHome": false,
+    "projects": [
+      "Snowfall"
+    ]
   },
   {
-    id: "vivid",
-    name: "Vivid",
-    handle: "@vivid_exile",
-    role: "best Friend, // @vivid_exile",
-    avatar: "Friends/vivid.jpg",
-    bio: "An ex-military veteran I met in my very first Discord server. Despite a troubled past he showed incredible strength and kindness. we became friends and helped each other through a lot. as he became my first friend when i came out of my shell, He was the person who got me back into streaming and introduced me to a whole new circle of people — including Erik",
-    tags: ["friend"],
-    links: { twitter: "https://x.com/vivid_exile?s=20" },
-    credits: [],
-    color: "from-pink-500/30 to-pink-600/10",
-    icon: "fas fa-guitar"
+    "id": "kula",
+    "name": "Kula",
+    "handle": "@mee_yawwwwww",
+    "role": "Friend, Drummer // @mee_yawwwwww",
+    "avatar": "Friends/kula.jpg",
+    "bio": "Kula is a musician and drummer I met during an idol group project. Even though the project eventually fell apart, we connected through music and he turned out to be a really chill guy. He mentioned wanting to be part of something, so I invited him to play drums on my single Stuck In Time. We worked well together, and I will likely ask him to handle the drums again in future projects.",
+    "tags": [
+      "friend",
+      "collab"
+    ],
+    "links": {
+      "twitter": "https://x.com/mee_yawwwwww?s=20",
+      "spotify": "",
+      "instagram": "",
+      "website": ""
+    },
+    "credits": [
+      {
+        "song": "Stuck In Time",
+        "songId": "stuck_in_time",
+        "role": "Drums",
+        "note": ""
+      },
+      {
+        "song": "Adrenaline",
+        "songId": "adrenaline",
+        "role": "Drums",
+        "note": ""
+      }
+    ],
+    "color": "from-[#A596DA]/30 to-[#8B78CB]/10",
+    "icon": "fas fa-drum"
   },
   {
-    id: "skylar",
-    name: "Skylar",
-    handle: "@skylar_corgi",
-    role: "Friend, // @skylar_corgi",
-    avatar: "Friends/skylar.jpg",
-    bio: "Skylar is a best friend i met trough vivid on vivid first stream she and vivid are great support",
-    tags: ["friend"],
-    links: { twitter: "https://x.com/skylar_corgi?s=20" },
-    credits: [],
-    color: "from-purple-500/30 to-purple-600/10",
-    icon: "fas fa-guitar"
+    "id": "vivid",
+    "name": "Vivid",
+    "handle": "@vivid_exile",
+    "role": "best Friend, // @vivid_exile",
+    "avatar": "Friends/vivid.jpg",
+    "bio": "An ex-military veteran I met in my very first Discord server. Despite a troubled past he showed incredible strength and kindness. we became friends and helped each other through a lot. as he became my first friend when i came out of my shell, He was the person who got me back into streaming and introduced me to a whole new circle of people — including Erik",
+    "tags": [
+      "friend"
+    ],
+    "links": {
+      "twitter": "https://x.com/vivid_exile?s=20"
+    },
+    "credits": [],
+    "color": "from-pink-500/30 to-pink-600/10",
+    "icon": "fas fa-guitar"
   },
   {
-    id: "nox",
-    name: "Nox",
-    handle: "@Nox_Daemon",
-    role: "Friend, // @Nox_Daemon",
-    avatar: "Friends/nox.jpg",
-    bio: "Nox is a friend i met trough vivid again lol, i saw vivid inetracting with nox a lot and weeks later she became on of my friends aswell,",
-    tags: ["friend"],
-    links: { twitter: "https://x.com/Nox_Daemon?s=20" },
-    credits: [],
-    color: "from-blue-500/30 to-blue-600/10",
-    icon: "fas fa-guitar"
+    "id": "skylar",
+    "name": "Skylar",
+    "handle": "@skylar_corgi",
+    "role": "Friend, // @skylar_corgi",
+    "avatar": "Friends/skylar.jpg",
+    "bio": "Skylar is a best friend i met trough vivid on vivid first stream she and vivid are great support",
+    "tags": [
+      "friend"
+    ],
+    "links": {
+      "twitter": "https://x.com/skylar_corgi?s=20"
+    },
+    "credits": [],
+    "color": "from-purple-500/30 to-purple-600/10",
+    "icon": "fas fa-guitar"
+  },
+  {
+    "id": "nox",
+    "name": "Nox",
+    "handle": "@Nox_Daemon",
+    "role": "Friend, // @Nox_Daemon",
+    "avatar": "Friends/nox.jpg",
+    "bio": "Nox is a friend i met trough vivid again lol, i saw vivid inetracting with nox a lot and weeks later she became on of my friends aswell,",
+    "tags": [
+      "friend"
+    ],
+    "links": {
+      "twitter": "https://x.com/Nox_Daemon?s=20"
+    },
+    "credits": [],
+    "color": "from-blue-500/30 to-blue-600/10",
+    "icon": "fas fa-guitar"
   }
 ];
 
