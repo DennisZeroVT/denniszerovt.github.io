@@ -1506,6 +1506,51 @@ h1,h2,h3{letter-spacing:-.01em}
 }
 </style>
 
+<style id="flat-gradients">
+/* Static gradients only: painted once, no blur, no fixed layers */
+:root{--g-accent:linear-gradient(135deg,#A596DA 0%,#C4B5FD 100%)}
+
+/* page: soft purple wash from the top + a faint side glow, fading into the base colour */
+body,body.optimized{
+  background-color:#0f0c18!important;
+  background-image:
+    radial-gradient(900px 520px at 12% -80px,rgba(165,150,218,.22),transparent 70%),
+    radial-gradient(800px 480px at 95% 140px,rgba(118,101,189,.16),transparent 70%),
+    linear-gradient(180deg,#171028 0,#0f0c18 720px)!important;
+  background-repeat:no-repeat!important;
+  background-size:100% 100%,100% 100%,100% 720px!important;
+  background-attachment:scroll!important;
+}
+
+/* cards: subtle top-lit gradient + purple hairline on top edge */
+.glass,.people-grid .person-card,.song-row,#songs-grid .group,#albums-grid .group{
+  background:linear-gradient(180deg,#1e1832 0%,#151021 100%)!important;
+  border-color:#33295a!important;
+}
+nav.glass{background:linear-gradient(180deg,#171028,#120e1d)!important}
+footer.glass{background:linear-gradient(180deg,#120e1d,#0c0912)!important}
+.home-stat{background:linear-gradient(180deg,#1e1832,#151021)!important}
+#songOverlayGlass,#albumOverlay .glass,.overlay-content,#mobile-menu{
+  background:linear-gradient(180deg,#1b1530,#110d1c)!important}
+.person-banner,.person-banner-bg{background:linear-gradient(135deg,#4a3d82 0%,#2a2147 60%,#1e1832 100%)!important}
+
+/* accents */
+.gradient-text{
+  background:linear-gradient(135deg,#A596DA 0%,#C4B5FD 55%,#E4DCFF 100%)!important;
+  -webkit-background-clip:text!important;background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;color:transparent!important}
+.from-\[\#A596DA\],.nav-pill.active,#mobile-menu a.active,.person-social-btn{
+  background-image:var(--g-accent)!important;background-color:#A596DA!important}
+.nav-pill.active:hover,.person-social-btn:hover{filter:brightness(1.08)}
+.nav-pill:hover{background:rgba(165,150,218,.14)!important}
+.glow-hover:hover,.people-grid .person-card:hover,.song-row:hover{
+  border-color:#8b78cb!important}
+
+/* hero buttons + year/genre chips get a faint tint instead of flat grey */
+.song-genre-chip,.person-role-pill,.p-tag,.person-chip{background:rgba(165,150,218,.14)!important}
+.view-toggle button.active,.genre-pill-btn.active,.cat-list-btn.active{
+  background:linear-gradient(135deg,rgba(165,150,218,.32),rgba(139,120,203,.2))!important}
+</style>
 </head>
 <body class="antialiased">
 <nav class="fixed top-0 w-full z-50 glass">
