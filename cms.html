@@ -383,6 +383,16 @@ body{background-color:#0d0b14!important;background-image:radial-gradient(900px 5
 .logo,.btn.primary{background:linear-gradient(135deg,#A596DA,#C4B5FD)!important}
 .tab.active{background:linear-gradient(135deg,rgba(165,150,218,.28),rgba(118,101,189,.14))!important}
 </style>
+<style id="plats">
+.plats{display:flex;flex-wrap:wrap;gap:8px}
+.plat{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:4px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;min-height:42px}
+.plat::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c);opacity:.35}
+.plat::after{content:"off";font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;margin-left:2px}
+.plat:hover{border-color:var(--c);color:#fff}
+.plat[aria-pressed="true"]{color:#fff;border-color:var(--c);background:rgba(165,150,218,.14);background:color-mix(in srgb,var(--c) 22%,transparent)}
+.plat[aria-pressed="true"]::before{opacity:1}
+.plat[aria-pressed="true"]::after{content:"on";opacity:.9}
+</style>
 </head>
 <body>
 <div class="app">
@@ -619,7 +629,7 @@ function buildStaticSongCardsHtml(songs){
     return '<p style="color:var(--text-secondary,#9d94b8);padding:2rem;text-align:center;grid-column:1/-1">No songs yet.</p>';
   }
   return list.map(s => {
-    const badges = (s.badges || []).slice(0, 3).map(b => {
+    const badges = (s.badges || []).filter(b => !platKeyOfBadge(b)).slice(0, 3).map(b => {
       const label = typeof b === 'string' ? b : (b.label || '');
       const color = (b && typeof b === 'object' && b.color) || null;
       return color
@@ -644,7 +654,7 @@ function buildStaticSongCardsHtml(songs){
             <h3 class="font-semibold text-white truncate">${esc(s.title)}</h3>
             <p class="text-sm text-[var(--text-secondary)] mt-1">${esc(s.artist || '')}</p>
             ${genreChips ? `<div class="flex gap-1.5 mt-2 flex-wrap">${genreChips}</div>` : ''}
-            <div class="flex gap-1.5 mt-3 flex-wrap">${badges}</div>
+            <div class="flex gap-1.5 mt-3 flex-wrap">${badges}${platformBadgesHtml(s)}</div>
         </div>
     </div>`;
   }).join('\n\n');
@@ -1046,10 +1056,8 @@ function renderSongEditor(s){
         <input id="s_audio" type="text" placeholder="Audio URL" value="${esc(s.audio||'')}">
         ${s.audio?`<audio class="audio" controls src="${s.audio}"></audio>`:''}
       </div>
-      <div class="field full"><label>Streaming URLs</label>
-        <div class="links-grid">
-          ${['spotify','apple','tidal','youtube','amazon','deezer'].map(k=>`<div><label class="hint">${k}</label><input id="s_${k}" value="${esc(s.streaming?.[k]||'')}"></div>`).join('')}
-        </div>
+      <div class="field full"><label>Platforms <span class="hint">· tap to turn on. Each badge links to your artist page.</span></label>
+        <div class="plats">${PLATFORM_ORDER.map(k=>`<button type="button" class="plat" data-k="${k}" style="--c:${PLAT_META[k].c}" aria-pressed="${songPlats(s).includes(k)}">${PLAT_META[k].label}</button>`).join('')}</div>
       </div>
       <div class="field full"><label>Credits</label>
         <div id="credits_editor"></div>
@@ -1142,6 +1150,7 @@ function renderSongEditor(s){
   }
   $('#add_badge').onclick=()=>{ s.badges.push({label:'New', color:'#A596DA'}); renderBadges(); };
   renderBadges();
+  document.querySelectorAll('.plat').forEach(b=>{ b.onclick=()=>b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')!=='true'); });
 
   // --- Genre tag editor ---
   s.genres = Array.isArray(s.genres) ? s.genres.slice() : [];
@@ -1220,6 +1229,36 @@ function renderSongEditor(s){
   $('#s_coverfile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ setStatus('Uploading cover…','work'); const url=await uploadFile(f, `${UPLOADS.covers}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#s_cover').value=url; setStatus('Cover uploaded','ok'); }catch(err){ setStatus('Upload failed','err') } };
   $('#s_audiofile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ setStatus('Uploading audio…','work'); const url=await uploadFile(f, `${UPLOADS.songs}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#s_audio').value=url; setStatus('Audio uploaded','ok'); }catch(err){ setStatus('Upload failed','err') } };
 }
+/* ---- Platform pills: on = badge + button linking to the ARTIST page ---- */
+const ARTIST_PAGES = {
+  "spotify": "https://open.spotify.com/artist/1sDYqTh1SQNJksxNAXbxyS",
+  "apple": "https://music.apple.com/nl/artist/denniszerovt/1840250778",
+  "tidal": "https://tidal.com/artist/66966649",
+  "amazon": "https://music.amazon.com/artists/B0FNKV8PTN/denniszerovt",
+  "deezer": "https://www.deezer.com/en/artist/342624221",
+  "youtube": "https://youtube.com/@denniszerovt"
+};
+const PLAT_META = {
+  spotify:{label:'Spotify',c:'#1DB954',bg:'#1DB954',fg:'#ffffff'},
+  apple:{label:'Apple Music',c:'#FA243C',bg:'#FA243C',fg:'#ffffff'},
+  tidal:{label:'Tidal',c:'#d9d9d9',bg:'#000000',fg:'#ffffff',bd:'rgba(255,255,255,0.25)'},
+  amazon:{label:'Amazon Music',c:'#00A8E1',bg:'#00A8E1',fg:'#062430'},
+  deezer:{label:'Deezer',c:'#A238FF',bg:'#A238FF',fg:'#ffffff'},
+  youtube:{label:'YouTube',c:'#FF0000',bg:'#FF0000',fg:'#ffffff'}
+};
+const PLATFORM_ORDER = ['spotify','apple','tidal','amazon','deezer','youtube'];
+const PLAT_ALIAS = {'spotify':'spotify','apple':'apple','apple music':'apple','tidal':'tidal','amazon':'amazon','amazon music':'amazon','deezer':'deezer','youtube':'youtube','youtube music':'youtube'};
+function platKeyOfBadge(b){ return PLAT_ALIAS[String(typeof b==='string'?b:(b&&b.label)||'').trim().toLowerCase()]||null; }
+function songPlats(s){
+  const on=new Set();
+  Object.entries(s.streaming||{}).forEach(([k,v])=>{ if(v&&ARTIST_PAGES[k]) on.add(k); });
+  (s.badges||[]).forEach(b=>{ const k=platKeyOfBadge(b); if(k) on.add(k); });
+  return PLATFORM_ORDER.filter(k=>on.has(k));
+}
+function platformBadgesHtml(s){
+  return songPlats(s).map(k=>{ const m=PLAT_META[k];
+    return `<a class="plat-badge text-[10px] px-2 py-0.5 rounded-full" href="${ARTIST_PAGES[k]}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${m.label} artist page" style="background:${m.bg};color:${m.fg}${m.bd?';border:1px solid '+m.bd:''}">${m.label}</a>`; }).join('');
+}
 async function saveSong(){
   const s=getCurrentItem(); if(!s) return;
   s.title=$('#s_title').value.trim(); s.artist=$('#s_artist').value.trim(); s.year=parseInt($('#s_year').value)||new Date().getFullYear();
@@ -1227,7 +1266,8 @@ async function saveSong(){
   s.genres = Array.isArray(s.genres) ? s.genres.filter(Boolean) : [];
   s.badges=(s.badges||[]).map(b=>({label:(b.label||'').trim(), color:b.color||'#A596DA'})).filter(b=>b.label);
   s.cover=$('#s_cover').value.trim(); s.audio=$('#s_audio').value.trim();
-  s.streaming={ spotify:$('#s_spotify').value, apple:$('#s_apple').value, tidal:$('#s_tidal').value, youtube:$('#s_youtube').value, amazon:$('#s_amazon').value, deezer:$('#s_deezer').value };
+  s.streaming={}; PLATFORM_ORDER.forEach(k=>{ const b=document.querySelector('.plat[data-k="'+k+'"]'); s.streaming[k]=(b&&b.getAttribute('aria-pressed')==='true')?ARTIST_PAGES[k]:''; });
+  s.badges=(s.badges||[]).filter(b=>!platKeyOfBadge(b));
   s.about=$('#s_about').value; s.thoughts=$('#s_thoughts').value; s.miscellaneous=$('#s_misc').value; s.behindTheScenes=$('#s_bts').value;
   s.credits = (s.credits||[]).map(c=>({ role:(c.role||'').trim(), name:(c.name||'').trim(), personId:c.personId||null })).filter(c=>c.role || c.name);
   s.id = s.id || slugify(s.title);
