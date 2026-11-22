@@ -1,1690 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Playables SDK -->
-<script>// Playables SDK v1.0.0
-// Game lifecycle bridge: rAF-based game-ready detection + event communication
-(function() {
-  'use strict';
-
-  // Idempotency: skip if already initialized (e.g., server-side injection
-  // followed by client-side inject-javascript via the Bloks webview component).
-  if (window.playablesSDK) return;
-
-  var HANDLER_NAME = 'playablesGameEventHandler';
-  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
-  var RAF_FRAME_THRESHOLD = 3;
-
-  var gameReadySent = false;
-  var firstInteractionSent = false;
-  var errorSent = false;
-  var frameCount = 0;
-  var originalRAF = window.requestAnimationFrame;
-
-  // --- Transport Layer ---
-
-  function hasIOSBridge() {
-    return !!(window.webkit &&
-              window.webkit.messageHandlers &&
-              window.webkit.messageHandlers[HANDLER_NAME]);
-  }
-
-  function hasAndroidBridge() {
-    return !!(window[ANDROID_BRIDGE_NAME] &&
-              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
-  }
-
-  function isInIframe() {
-    return !!(window.parent && window.parent !== window);
-  }
-
-  function sendEvent(eventName, payload) {
-    var message = {
-      type: eventName,
-      payload: payload || {},
-      timestamp: Date.now()
-    };
-
-    if (hasIOSBridge()) {
-      try {
-        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
-      } catch (e) { /* ignore */ }
-      return;
-    }
-
-    if (hasAndroidBridge()) {
-    try {
-      var p = payload || {};
-      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
-      p.timestamp = message.timestamp;
-      window[ANDROID_BRIDGE_NAME].postEvent(
-        eventName,
-        JSON.stringify(p)
-      );
-    } catch (e) { /* ignore */ }
-    return;
-  }
-
-    if (isInIframe()) {
-      try {
-        window.parent.postMessage(message, '*');
-      } catch (e) { /* ignore */ }
-      return;
-    }
-  }
-
-  // --- rAF Game-Ready Detection ---
-
-  function onFrame() {
-    if (gameReadySent) return;
-
-    frameCount++;
-    if (frameCount >= RAF_FRAME_THRESHOLD) {
-      gameReadySent = true;
-      sendEvent('game_ready', {
-        frame_count: frameCount,
-        detected_at: Date.now()
-      });
-      return;
-    }
-
-    originalRAF.call(window, onFrame);
-  }
-
-  if (originalRAF) {
-    window.requestAnimationFrame = function(callback) {
-      if (!gameReadySent) {
-        return originalRAF.call(window, function(timestamp) {
-          frameCount++;
-          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
-            gameReadySent = true;
-            sendEvent('game_ready', {
-              frame_count: frameCount,
-              detected_at: Date.now()
-            });
-          }
-          callback(timestamp);
-        });
-      }
-      return originalRAF.call(window, callback);
-    };
-  }
-
-  // --- First User Interaction Detection ---
-
-  function setupFirstInteractionDetection() {
-    var events = ['touchstart', 'mousedown', 'keydown'];
-
-    function onFirstInteraction() {
-      if (firstInteractionSent) return;
-      firstInteractionSent = true;
-      sendEvent('user_interaction_start', null);
-
-      for (var i = 0; i < events.length; i++) {
-        document.removeEventListener(events[i], onFirstInteraction, true);
-      }
-    }
-
-    for (var i = 0; i < events.length; i++) {
-      document.addEventListener(events[i], onFirstInteraction, true);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
-  } else {
-    setupFirstInteractionDetection();
-  }
-
-  // --- Auto Error Capture ---
-
-  window.addEventListener('error', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    sendEvent('error', {
-      message: event.message || 'Unknown error',
-      source: event.filename || '',
-      lineno: event.lineno || 0,
-      colno: event.colno || 0,
-      auto_captured: true
-    });
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    var reason = event.reason;
-    sendEvent('error', {
-      message: (reason instanceof Error) ? reason.message : String(reason),
-      type: 'unhandled_promise_rejection',
-      auto_captured: true
-    });
-  });
-
-  // --- Public API ---
-
-  window.playablesSDK = {
-    complete: function(score) {
-      sendEvent('game_ended', {
-        score: score,
-        completed: true
-      });
-    },
-
-    error: function(message) {
-      if (errorSent) return;
-      errorSent = true;
-      sendEvent('error', {
-        message: message || 'Unknown error',
-        auto_captured: false
-      });
-    },
-
-    sendEvent: function(eventName, payload) {
-      if (!eventName || typeof eventName !== 'string') return;
-      sendEvent(eventName, payload);
-    }
-  };
-
-  // Kick off rAF detection in case no game code calls rAF immediately
-  if (originalRAF) {
-    originalRAF.call(window, onFrame);
-  }
-})();</script>
-<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
-(function() {
-  if (window.__playableTouchPatchInstalled) return;
-  window.__playableTouchPatchInstalled = true;
-  var origAdd = EventTarget.prototype.addEventListener;
-  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
-  EventTarget.prototype.addEventListener = function(type, listener, options) {
-    if (blockedTypes[type]) {
-      if (options === undefined || options === null) {
-        options = { passive: true };
-      } else if (typeof options === 'boolean') {
-        options = { capture: options, passive: true };
-      } else {
-        options = Object.assign({}, options, { passive: true });
-      }
-    }
-    return origAdd.call(this, type, listener, options);
-  };
-})();
-</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dennis CMS — Unified GitHub Manager</title>
+<title>Dennis CMS — Gold Dusk</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icons/pfp.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-:root{
-  --bg:#07070b;--bg-2:#0d0d14;--panel:rgba(18,18,27,.86);--panel-strong:rgba(22,22,33,.96);
-  --border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.15);
-  --text:#f4f1fb;--muted:#9894aa;--accent:#a596da;--accent-2:#7665bd;
-  --green:#34d399;--red:#f87171;--amber:#fbbf24;--radius:6px
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(900px at 8% 0%,rgba(165,150,218,.13),transparent 60%),radial-gradient(800px at 100% 20%,rgba(118,101,189,.10),transparent 60%),radial-gradient(700px at 55% 100%,rgba(165,150,218,.06),transparent 60%);z-index:-1}
-button,input,select,textarea{font:inherit}
-button{touch-action:manipulation}
-.glass{background:var(--panel);border:1px solid var(--border);box-shadow:0 18px 55px rgba(0,0,0,.28);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.app{height:100dvh;min-height:100vh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:0;padding:12px}
-.topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px 14px;border-radius:var(--radius);position:relative;z-index:20}
-.brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:.7px;white-space:nowrap}
-.logo{width:36px;height:36px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 8px 24px rgba(165,150,218,.25);display:grid;place-items:center;color:#0b0714;font-weight:950;font-size:13px}
-.tabs{display:flex;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding:3px;align-items:center}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:0 0 auto;min-height:40px;padding:9px 13px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.45px;cursor:pointer;transition:background .16s,border-color .16s,color .16s,transform .16s;white-space:nowrap}
-.tab:hover{color:var(--text);background:rgba(255,255,255,.045)}
-.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.tab.active{color:#fff;background:linear-gradient(135deg,rgba(165,150,218,.20),rgba(118,101,189,.12));border-color:rgba(165,150,218,.34);box-shadow:inset 0 1px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.18)}
-.connect{display:flex;gap:8px;align-items:center}
-.connect input{width:210px;height:40px;background:rgba(0,0,0,.28);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-size:13px;outline:none}
-.connect input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(165,150,218,.14)}
-.btn{min-height:40px;padding:9px 13px;border-radius:4px;background:rgba(255,255,255,.055);border:1px solid var(--border);color:var(--text);font-weight:750;font-size:13px;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
-.btn:hover{background:rgba(255,255,255,.09);border-color:var(--border-strong)}
-.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent;color:#0e0a18;box-shadow:0 8px 22px rgba(165,150,218,.20)}
-.btn.ghost{background:transparent}.btn.small{min-height:34px;padding:7px 10px;font-size:12px;border-radius:3px}.btn.danger{background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.25);color:#fecaca}.btn.danger:hover{background:rgba(248,113,113,.18)}
-.workspace{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);gap:12px;min-height:0;padding:12px 0}
-.sidebar,.editor{border-radius:6px;min-height:0;overflow:hidden}
-.sidebar{display:flex;flex-direction:column}
-.side-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.018)}
-.side-head h2{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:850}
-.list{overflow:auto;padding:10px;flex:1;display:flex;flex-direction:column;gap:7px;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(165,150,218,.35) transparent}
-.item{display:flex;gap:11px;padding:10px;border-radius:4px;cursor:pointer;border:1px solid transparent;align-items:center;background:rgba(0,0,0,.16);transition:.14s;min-height:68px}
-.item:hover{background:rgba(255,255,255,.045);border-color:var(--border)}
-.item.active{background:linear-gradient(90deg,rgba(165,150,218,.15),rgba(165,150,218,.06));border-color:rgba(165,150,218,.32);box-shadow:inset 3px 0 var(--accent)}
-.thumb{width:48px;height:48px;border-radius:3px;object-fit:cover;background:#0d0d14;flex:0 0 48px;display:grid;place-items:center;font-size:22px;border:1px solid var(--border);overflow:hidden}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}.meta{min-width:0;flex:1}.meta .t{font-weight:750;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta .s{font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:3px;min-width:0}.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:800;background:rgba(165,150,218,.15);color:var(--accent);border:1px solid rgba(165,150,218,.25);text-transform:uppercase;letter-spacing:.3px}.badge.friend{background:rgba(52,211,153,.15);color:#6ee7b7;border-color:rgba(52,211,153,.25)}.badge.collab{background:rgba(251,191,36,.15);color:#fcd34d;border-color:rgba(251,191,36,.25)}
-.editor{display:flex;flex-direction:column}
-.ed-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.018)}
-.ed-head .title{font-weight:850;font-size:15px;letter-spacing:.2px}.ed-actions{display:flex;gap:8px;flex-wrap:wrap}.ed-body{overflow:auto;padding:20px;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(165,150,218,.35) transparent}
-.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:1100px}.field{display:flex;flex-direction:column;gap:7px;min-width:0}.field.full{grid-column:1/-1}.field label{font-size:10.5px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.7px}
-input[type="text"],input[type="number"],input[type="date"],input[type="password"],select,textarea{background:rgba(0,0,0,.27);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:4px;font-size:14px;outline:none;transition:.16s;width:100%;font-family:inherit;min-height:42px}textarea{min-height:100px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(165,150,218,.13)}
-.color-row{display:flex;gap:10px;align-items:center}input[type="color"]{width:48px;height:42px;padding:3px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer}.hint{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}.switch input{appearance:none;width:40px;height:23px;background:rgba(255,255,255,.12);border-radius:4px;position:relative;border:1px solid var(--border);transition:.2s}.switch input::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:2px;background:white;transition:.2s}.switch input:checked{background:rgba(165,150,218,.5);border-color:var(--accent)}.switch input:checked::after{left:19px;background:#0e0a18}
-.blocks{display:flex;flex-direction:column;gap:12px;margin-top:6px}.block{background:var(--panel-strong);border:1px solid var(--border);border-radius:4px;padding:13px}.block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}.block-type{font-size:10.5px;font-weight:850;letter-spacing:.6px;color:var(--accent);text-transform:uppercase}.block-ctrls{display:flex;gap:6px}.icon{width:32px;height:32px;display:grid;place-items:center;border-radius:4px;background:rgba(255,255,255,.05);border:1px solid var(--border);cursor:pointer;font-size:14px;transition:.15s}.icon:hover{background:rgba(255,255,255,.1)}
-.divider-prev{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:8px 0;border-radius:2px}.img-prev{max-width:100%;max-height:220px;border-radius:4px;border:1px solid var(--border);cursor:zoom-in;display:block}.upload{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.upload input[type="file"]{display:none}.file-btn{min-height:38px;padding:8px 11px;border-radius:4px;background:rgba(255,255,255,.05);border:1px dashed var(--border-strong);cursor:pointer;font-size:12.5px;font-weight:750;display:inline-flex;align-items:center}.file-btn:hover{background:rgba(255,255,255,.09)}
-.tracks{display:flex;flex-direction:column;gap:8px}.track{display:grid;grid-template-columns:minmax(0,1fr) 90px 110px 130px 32px;gap:8px;align-items:center;background:rgba(0,0,0,.20);padding:8px;border-radius:4px;border:1px solid var(--border)}.track .icon{width:30px;height:32px}.links-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);gap:12px;text-align:center;padding:40px}.empty .big{font-size:48px;opacity:.7}.statusbar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:4px;background:rgba(0,0,0,.28);gap:10px;min-width:0}.statusbar>div:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.status-msg{display:flex;align-items:center;gap:8px;min-width:0}.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}.dot.ok{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.5)}.dot.err{background:var(--red)}.dot.work{background:var(--amber);animation:pulse 1s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:20px}.modal.show{display:flex}.modal img{max-width:92vw;max-height:88vh;border-radius:4px;border:1px solid var(--border)}
-body.cms-modal-open{overflow:hidden}
-body.cms-modal-open::before{content:"";position:fixed;inset:0;background:rgba(4,3,12,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:900}
-.editor{display:none!important}
-.editor.is-open{display:flex!important;position:fixed;z-index:901;inset:clamp(18px,4vh,44px) clamp(18px,5vw,72px);width:auto;height:auto;max-width:1400px;margin:auto;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 60px rgba(165,150,218,.12);border-radius:8px}
-.editor.is-open .ed-head{position:sticky;top:0;z-index:5;flex-shrink:0;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(15,12,27,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;gap:14px}
-.editor.is-open .ed-body{min-height:0;overflow:auto;padding:22px}
-.editor.is-open .ed-close{margin-left:auto;width:42px;height:42px;border-radius:4px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center}
-.editor.is-open .ed-close:hover{background:rgba(255,255,255,.12)}
-.editor.is-open .ed-actions{display:flex;gap:8px;align-items:center}
-.editor.is-open .title{min-width:0;flex:1}
-
-.alert{padding:11px 12px;border-radius:4px;font-size:13px;border:1px solid;margin-bottom:12px}.alert.warn{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.28);color:#fde68a}.audio{width:100%;margin-top:8px;background:rgba(0,0,0,.3);border-radius:4px}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{padding:5px 9px;border-radius:2px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-size:12px;cursor:pointer}.chip:hover{background:rgba(255,255,255,.1)}.sep{height:1px;background:var(--border);margin:14px 0}
-@media (max-width:1100px){
-  .app{padding:8px}.topbar{grid-template-columns:1fr auto;gap:10px}.tabs{grid-column:1/-1;grid-row:2;order:initial;width:100%;border-top:1px solid var(--border);padding-top:9px}.workspace{grid-template-columns:minmax(260px,310px) minmax(0,1fr)}.connect input{width:180px}
-}
-@media (max-width:760px){
-  body{overflow:hidden}.app{padding:6px;gap:0}.topbar{padding:10px;border-radius:4px;grid-template-columns:1fr auto}.brand{font-size:13px}.logo{width:34px;height:34px}
-  .connect{gap:6px}.connect input{width:0;min-width:0;flex:1}.connect{grid-column:1/-1;grid-row:3;width:100%;padding-top:9px;border-top:1px solid var(--border)}.connect .btn{flex:0 0 auto}
-  .tabs{grid-row:2;gap:7px;padding:9px 1px 2px}.tab{min-height:46px;padding:10px 15px;font-size:11px;border-radius:4px}.tab::before{display:block;font-size:16px;line-height:16px;margin-bottom:3px;opacity:.8}.tab[data-tab="blog"]::before{content:"✎"}.tab[data-tab="songs"]::before{content:"♫"}.tab[data-tab="people"]::before{content:"♟"}.tab[data-tab="categories"]::before{content:"◆"}.tab[data-tab="albums"]::before{content:"▣"}
-  .workspace{display:flex;flex-direction:column;gap:8px;padding:8px 0;min-height:0}.sidebar{flex:0 0 30dvh;min-height:170px;max-height:300px;border-radius:4px}.side-head{padding:11px 12px}.list{padding:7px;gap:6px}.item{min-height:62px;padding:8px}.thumb{width:44px;height:44px;flex-basis:44px}
-  .editor{flex:1;min-height:0;border-radius:4px}.ed-head{padding:11px 12px}.ed-head .title{font-size:14px}.ed-actions{width:100%}.ed-actions .btn{flex:1}.ed-body{padding:13px}.form{grid-template-columns:1fr;gap:13px}.field.full{grid-column:auto}.track{grid-template-columns:minmax(0,1fr) 72px 32px}.track select:nth-child(3){display:none}.links-grid{grid-template-columns:1fr}.statusbar{margin-top:0;padding:7px 9px}.statusbar>div:last-child{display:none}
-}
-@media (max-width:430px){
-  .brand span{font-size:12px}.tab{flex:1;min-width:82px;padding-inline:8px}.tabs{overflow-x:auto}.sidebar{flex-basis:27dvh;max-height:240px}.connect input{font-size:12px}.ed-body{padding:11px}.form{gap:11px}
-}
-  body.cms-modal-open::before{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
-  .editor.is-open{inset:8px;width:auto;height:auto;max-height:none;border-radius:6px}
-  .editor.is-open .ed-head{padding:12px 12px 12px 16px;gap:8px;align-items:flex-start}
-  .editor.is-open .title{font-size:18px;line-height:1.25;padding-top:9px}
-  .editor.is-open .ed-actions{order:3;margin-left:0}
-  .editor.is-open .ed-actions .btn{min-height:42px}
-  .editor.is-open .ed-close{order:4;flex:0 0 42px}
-  .editor.is-open .ed-body{padding:14px 14px 28px}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-@media (prefers-reduced-transparency:reduce){.glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel-strong)}}
-</style>
-<style id="ff-and-square">
-/* ================================================================
-   FIREFOX + SQUARE AESTHETIC (CMS) — safe subset only
-   ================================================================ */
-:root { --radius: 6px; }
-
-.tab, .btn, .connect input, .item, .badge, .logo, .block,
-.icon, .editor.is-open .ed-close, .alert, .audio, .file-btn,
-.statusbar, .modal img, #modalImg,
-input[type="text"], input[type="number"], input[type="date"],
-input[type="password"], select, textarea {
-  border-radius: 4px !important;
-}
-.thumb { border-radius: 3px !important; }
-.badge, .chip { border-radius: 2px !important; }
-.switch input { border-radius: 4px !important; }
-.switch input::after { border-radius: 2px !important; }
-.editor.is-open { border-radius: 8px !important; }
-.editor.is-open .ed-close { border-radius: 4px !important; }
-.workspace .sidebar, .workspace .editor { border-radius: 6px !important; }
-
-@-moz-document url-prefix() {
-  .glass, .editor.is-open .ed-head {
-    backdrop-filter: blur(14px) saturate(135%);
-    -webkit-backdrop-filter: blur(14px) saturate(135%);
-  }
-  .modal {
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-  body.cms-modal-open::before {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-  }
-
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(165,150,218,0.5) rgba(0,0,0,0.2);
-  }
-  .list, .ed-body, .modal {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(165,150,218,0.55) rgba(0,0,0,0.25);
-  }
-
-  :focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .gradient-border::before {
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-}
-</style>
-<style id="flat-solid">
-/* FLAT / SOLID THEME (Firefox-friendly): no blur, no glow, no gradient layers */
-:root{--panel:#12121b;--panel-strong:#161621}
-body{background:#0d0b14!important}
-body::before{display:none!important}
-*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.glass,.editor.is-open .ed-head{background:#12121b!important;box-shadow:none!important}
-.modal{background:rgba(5,4,10,.94)!important}
-body.cms-modal-open::before{background:rgba(5,4,10,.92)!important}
-.logo,.btn.primary,.tab.active,.editor.is-open,.dot.ok,.statusbar{box-shadow:none!important}
-.logo{background:var(--accent)!important}
-.btn.primary{background:var(--accent)!important;color:#0e0a18!important}
-.btn.primary:hover{background:#c4b5fd!important}
-.tab.active{background:rgba(165,150,218,.18)!important}
-.item.active{background:rgba(165,150,218,.12)!important}
-</style>
-<style id="flat-gradients">
-body{background-color:#0d0b14!important;background-image:radial-gradient(900px 500px at 8% -60px,rgba(165,150,218,.18),transparent 70%),radial-gradient(700px 420px at 100% 80px,rgba(118,101,189,.12),transparent 70%)!important;background-repeat:no-repeat!important;background-attachment:scroll!important}
-.glass,.editor.is-open .ed-head{background:linear-gradient(180deg,#1a1628,#12121b)!important}
-.logo,.btn.primary{background:linear-gradient(135deg,#A596DA,#C4B5FD)!important}
-.tab.active{background:linear-gradient(135deg,rgba(165,150,218,.28),rgba(118,101,189,.14))!important}
-</style>
-<style id="plats">
-.plats{display:flex;flex-wrap:wrap;gap:8px}
-.plat{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:4px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;min-height:42px}
-.plat::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c);opacity:.35}
-.plat::after{content:"off";font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;margin-left:2px}
-.plat:hover{border-color:var(--c);color:#fff}
-.plat[aria-pressed="true"]{color:#fff;border-color:var(--c);background:rgba(165,150,218,.14);background:color-mix(in srgb,var(--c) 22%,transparent)}
-.plat[aria-pressed="true"]::before{opacity:1}
-.plat[aria-pressed="true"]::after{content:"on";opacity:.9}
+:root{--bg:#101516;--panel:#1a2224;--accent:#E7D19C;--accent2:#D9BC7A;--cream:#F6EFD9;--amber:#E5A44C;--text:#EFEAE0;--muted:#9FA8A3;--line:rgba(231,209,156,.14);--line2:rgba(231,209,156,.34);--red:#E07A6A;--green:#7CC98F}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;background-image:radial-gradient(900px 400px at 80% -10%,rgba(231,209,156,.06),transparent 60%)}
+h1,h2,h3{font-family:'Sora',sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--accent)}
+input,select,textarea{font:inherit;font-size:13.5px;color:var(--text);background:rgba(16,21,22,.7);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;transition:.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(231,209,156,.1)}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+select option{background:var(--panel)}
+input[type=color]{padding:3px;height:38px;cursor:pointer}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+.hidden{display:none!important}
+.gold{background:linear-gradient(120deg,var(--cream),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:11px;font-weight:700;font-size:13px;border:1px solid var(--line);color:var(--muted);transition:.18s}
+.btn:hover{color:var(--cream);border-color:var(--line2)}
+.btn-gold{background:linear-gradient(120deg,var(--cream),var(--accent2));color:#241f10;border:0}
+.btn-gold:hover{filter:brightness(1.06);color:#241f10}
+.btn-danger{color:var(--red);border-color:rgba(224,122,106,.35)}
+.btn-danger:hover{background:rgba(224,122,106,.1);color:var(--red)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:9px}
+/* gate */
+#gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.gate-card{width:100%;max-width:380px;background:linear-gradient(165deg,#1c2426,#141a1b);border:1px solid var(--line2);border-radius:20px;padding:36px;text-align:center}
+.gate-card img{width:64px;height:64px;border-radius:50%;border:2px solid var(--line2);margin:0 auto 16px}
+.gate-card h1{font-size:22px;margin-bottom:4px}
+.gate-card p{color:var(--muted);font-size:13px;margin-bottom:22px}
+.gate-card input{margin-bottom:12px;text-align:center}
+.gate-note{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.5}
+/* app */
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(16,21,22,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.topbar .logo{font-family:'Sora';font-weight:800;font-size:16px;display:flex;gap:10px;align-items:center}
+.topbar .logo img{width:30px;height:30px;border-radius:50%;border:1px solid var(--line2)}
+.conn{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.conn input{width:auto}
+#ghToken{width:210px}#ghRepo{width:250px}#ghBranch{width:70px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0}
+.dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.tabs{display:flex;gap:6px;padding:14px 20px 0;flex-wrap:wrap}
+.tab{padding:9px 18px;border-radius:11px 11px 0 0;font-weight:700;font-size:13px;color:var(--muted);border:1px solid transparent;border-bottom:0}
+.tab.active{color:var(--accent);background:var(--panel);border-color:var(--line)}
+.workspace{display:grid;grid-template-columns:270px 1fr;gap:18px;padding:18px 20px 60px;align-items:start}
+.sidebar{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto}
+.sidebar .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sidebar .head h3{font-size:13px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.item-btn{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);transition:.15s;margin-bottom:4px;border:1px solid transparent}
+.item-btn:hover{color:var(--cream);background:rgba(231,209,156,.06)}
+.item-btn.active{color:var(--accent);background:rgba(231,209,156,.1);border-color:var(--line)}
+.item-btn small{display:block;font-size:11px;opacity:.6;font-weight:500}
+.editor{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;min-height:300px}
+.editor .placeholder{color:var(--muted);text-align:center;padding:60px 20px;font-size:14px}
+.ed-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.ed-head h2{font-size:19px;flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.asset-row{display:flex;gap:8px}
+.asset-row input{flex:1}
+.sub-card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:rgba(16,21,22,.4)}
+.sub-card .sc-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.sub-card .sc-head strong{font-size:12px;color:var(--accent);flex:1;text-transform:uppercase;letter-spacing:.05em}
+.icon-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);color:var(--muted);font-size:11px;display:inline-flex;align-items:center;justify-content:center}
+.icon-btn:hover{color:var(--cream);border-color:var(--line2)}
+.icon-btn.del:hover{color:var(--red);border-color:rgba(224,122,106,.4)}
+.section-label{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:22px 0 10px;padding-top:16px;border-top:1px solid var(--line)}
+.add-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.checks{display:flex;gap:16px}
+.checks label{display:flex;gap:7px;align-items:center;font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;font-weight:600}
+details{margin-top:8px}
+details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:10px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:#1c2426;border:1px solid var(--line2);color:var(--cream);padding:11px 22px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:90vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.err{border-color:rgba(224,122,106,.5);color:var(--red)}
+.dirty-flag{font-size:11px;color:var(--amber);font-weight:700}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.sidebar{position:static;max-height:260px}.grid2,.grid3{grid-template-columns:1fr}.conn{margin-left:0}#ghToken,#ghRepo{width:100%;flex:1}}
 </style>
 </head>
 <body>
-<div class="app">
-  <header class="topbar glass">
-    <div class="brand"><div class="logo">DZ</div><span>DENNIS CMS</span></div>
-    <nav class="tabs" id="tabs">
-      <button class="tab active" data-tab="blog">BLOG</button>
-      <button class="tab" data-tab="songs">SONGS</button>
-      <button class="tab" data-tab="people">PEOPLE</button>
-      <button class="tab" data-tab="categories">CATEGORIES</button>
-      <button class="tab" data-tab="albums">ALBUMS</button>
-    </nav>
-    <div class="connect">
-      <input id="token" type="hidden">
-      <button id="btnConnect" class="btn primary">Connect</button>
-    </div>
-  </header>
 
+<!-- ===== GATE ===== -->
+<div id="gate">
+  <div class="gate-card">
+    <img src="/icons/pfp.png" alt="" onerror="this.style.display='none'">
+    <h1>Dennis <span class="gold">CMS</span></h1>
+    <p id="gateSub">Enter password to unlock</p>
+    <input type="password" id="gatePass" placeholder="Password" autocomplete="current-password">
+    <input type="password" id="gatePass2" class="hidden" placeholder="Repeat password">
+    <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="gateSubmit()" id="gateBtn">Unlock</button>
+    <div class="gate-note">The password only locks this page on this device — the real security is your GitHub token, which is never stored in the repo.<br><a href="#" onclick="resetPass();return false" style="font-size:11px">Forgot password? Reset it here</a></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo"><img src="/icons/pfp.png" alt="" onerror="this.style.display='none'">Dennis <span class="gold">CMS</span></div>
+    <span class="dirty-flag hidden" id="dirtyFlag">● unsaved changes</span>
+    <div class="conn">
+      <span class="dot" id="connDot"></span>
+      <input id="ghRepo" placeholder="owner/repo" value="denniszerovt/denniszerovt.github.io">
+      <input id="ghBranch" placeholder="branch" value="main">
+      <input id="ghToken" type="password" placeholder="GitHub token (contents: read & write)">
+      <button class="btn" onclick="connect()" id="connectBtn"><i class="fas fa-plug"></i> Connect</button>
+      <button class="btn btn-gold" onclick="saveAll()" id="saveBtn" disabled><i class="fas fa-cloud-arrow-up"></i> Save</button>
+      <a class="btn" href="/" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> Site</a>
+      <button class="btn" onclick="lock()" title="Lock"><i class="fas fa-lock"></i></button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="posts" onclick="setTab('posts')"><i class="fas fa-book-open"></i> Blog</button>
+    <button class="tab" data-tab="songs" onclick="setTab('songs')"><i class="fas fa-music"></i> Songs</button>
+    <button class="tab" data-tab="people" onclick="setTab('people')"><i class="fas fa-users"></i> People</button>
+    <button class="tab" data-tab="categories" onclick="setTab('categories')"><i class="fas fa-tags"></i> Categories</button>
+    <button class="tab" data-tab="albums" onclick="setTab('albums')"><i class="fas fa-compact-disc"></i> Albums</button>
+  </div>
   <div class="workspace">
-    <aside class="sidebar glass">
-      <div class="side-head">
-        <h2 id="listTitle">Blog Posts</h2>
-        <button id="btnNew" class="btn small">+ New</button>
-      </div>
-      <div id="list" class="list"></div>
-    </aside>
-
-    <main class="editor glass" id="editor">
-      <div class="empty">
-        <div class="big">✦</div>
-        <div><b>Connect to GitHub</b><br><span class="hint">Enter token → Connect → select an item</span></div>
-      </div>
-    </main>
-  </div>
-
-  <footer class="statusbar">
-    <div class="status-msg"><span class="dot" id="dot"></span><span id="status">Not connected</span></div>
-    <div>denniszerovt/denniszerovt.github.io @ main</div>
-  </footer>
-</div>
-
-<div id="modal" class="modal" onclick="this.classList.remove('show')"><img id="modalImg" alt=""></div>
-
-<script>
-const REPO = 'denniszerovt/denniszerovt.github.io';
-const BRANCH = 'main';
-const OWNER = 'denniszerovt';
-
-// Content constants (SITE_SONGS, SITE_PEOPLE, etc.) now live in app.js, not
-// index.html — index.html/music.html/blog.html/etc. are just markup that
-// includes <script src="app.js">. The variable's still called INDEX_PATH
-// for the rest of this file's naming; it just points somewhere else now.
-const INDEX_PATH = 'app.js';
-
-// index.html itself (the actual markup file) — used only to bump a cache-busting
-// query param on the <script src="app.js"> tag after every save, so GitHub Pages
-// visitors (and the browser's own cache) always pick up the freshly-saved data
-// instead of serving a stale cached copy of app.js.
-const SITE_HTML_PATH = 'index.html';
-
-const UPLOADS = {
-  posts: 'images/posts/',
-  songs: 'SongData/Songs/',
-  covers: 'SongData/AlbumArt/',
-  people: 'Friends/'
-};
-
-const FALLBACK_CATEGORIES = [
-  {"id":"game-dev","name":"Game Dev","color":"#A596DA","subs":["Snowfall","Stuck In Time","Other Projects"]},
-  {"id":"music-production","name":"Music Production","color":"#ec4899","subs":["Snowfall","Originals","Remixes","Soundtracks","Behind the Beat"]},
-  {"id":"daily-life","name":"Daily Life","color":"#22c55e","subs":["Workflow","Thoughts","Updates","Gear"]}
-];
-const FALLBACK_POSTS = [
-  { id:"welcome-2025", title:"Welcome to the new CMS", category:"Daily Life", subcategory:"Update", date:"2025-01-15", color:"#A596DA", blocks:[{type:"text",content:"This is a glassmorphism CMS synced directly to GitHub. Write with blocks, upload images, and publish instantly."},{type:"divider"},{type:"text",content:"Legacy posts with body/images are auto-converted."}]} 
-];
-const FALLBACK_SONGS = [
-  {
-    id:"snowfall", title:"Snowfall", artist:"DennisZeroVT", year:2025, coverEmoji:"❄️",
-    cover:"https://denniszerovt.github.io/SongData/AlbumArt/snowfall.png",
-    audio:"https://denniszerovt.github.io/SongData/Songs/snowfall.mp3",
-    badges:["Lo-fi","Collab","Winter Vibes"],
-    streaming:{ spotify:"https://open.spotify.com/", apple:"https://music.apple.com/", tidal:"", youtube:"https://youtube.com/", amazon:"", deezer:"" },
-    about:"Snowfall was created during a late winter night with Erik on vocals and inspired by Viona's calming presence. It's about that quiet moment when the world slows down.",
-    thoughts:"I wanted to capture the feeling of watching snow fall at 2am through a window.",
-    miscellaneous:"Produced in FL Studio. Piano by me, vocals by Erik.",
-    behindTheScenes:"Erik recorded his takes in one night. We layered three harmonies to get that airy feel."
-  },
-  {
-    id:"stuck-in-time", title:"Stuck In Time", artist:"DennisZeroVT", year:2026, coverEmoji:"⏳",
-    cover:"https://denniszerovt.github.io/SongData/AlbumArt/stuck-in-time.png",
-    audio:"https://denniszerovt.github.io/SongData/Songs/stuck-in-time.mp3",
-    badges:["Drum & Bass","Collab"],
-    streaming:{ spotify:"", apple:"", tidal:"", youtube:"", amazon:"", deezer:"" },
-    about:"A track about looping memories and trying to move forward.",
-    thoughts:"This one hits different for me.",
-    miscellaneous:"140 BPM",
-    behindTheScenes:"Kula absolutely killed the drums on this. He sent me the stems at 3am and I knew instantly it was perfect. We built the entire drop around his groove."
-  }
-];
-const FALLBACK_PEOPLE = [
-  { id:"erik",   name:"Erik",   handle:"eri_k416",       role:"Friend // eri_k416",         avatar:"https://denniszerovt.github.io/Friends/erik.jpg",   bio:"Erik was the subject and inspiration for Snowfall.",  tags:["friend","collab"], links:{twitter:"",spotify:"",instagram:"",website:""}, credits:[{song:"Snowfall",       songId:"snowfall",     role:"Inspiration", note:"His character Viona shaped the whole mood"}],                                         color:"from-blue-500/30 to-blue-600/10",   icon:"fas fa-snowflake", showOnHome:true },
-  { id:"kula",   name:"Kula",   handle:"@mee_yawwwwww",  role:"Friend, Drummer // @mee_yawwwwww", avatar:"https://denniszerovt.github.io/Friends/kula.jpg", bio:"Kula is a musician and drummer I met during an idol group project.", tags:["friend","collab"], links:{twitter:"",spotify:"",instagram:"",website:""}, credits:[{song:"Stuck In Time", songId:"stuck_in_time", role:"Drums",        note:"Recorded live drums; killed the half-time section"}], color:"from-[#A596DA]/30 to-[#8B78CB]/10", icon:"fas fa-drum",      showOnHome:true },
-  { id:"vivid",  name:"Vivid",  handle:"@vivid_exile",   role:"Best Friend // @vivid_exile", avatar:"https://denniszerovt.github.io/Friends/vivid.jpg",  bio:"An ex-military veteran I met in my very first Discord server.", tags:["friend"], links:{}, credits:[], color:"from-pink-500/30 to-pink-600/10",   icon:"fas fa-guitar",    showOnHome:true },
-  { id:"skylar", name:"Skylar", handle:"@skylar_corgi",  role:"Friend // @skylar_corgi",     avatar:"https://denniszerovt.github.io/Friends/skylar.jpg", bio:"Skylar is a best friend I met through Vivid.",        tags:["friend"], links:{}, credits:[], color:"from-purple-500/30 to-purple-600/10", icon:"fas fa-guitar",    showOnHome:true },
-  { id:"nox",    name:"Nox",    handle:"@Nox_Daemon",    role:"Friend // @Nox_Daemon",       avatar:"https://denniszerovt.github.io/Friends/nox.jpg",    bio:"Nox is a friend I met through Vivid.",                tags:["friend"], links:{}, credits:[], color:"from-blue-500/30 to-blue-600/10",   icon:"fas fa-guitar",    showOnHome:true }
-];
-const FALLBACK_ALBUMS = [
-  { id:"solo-ep", name:"Solo EP", artist:"DennisZeroVT", year:2025, cover:"https://denniszerovt.github.io/SongData/AlbumArt/solo-ep.png", status:"Released", description:"My first solo collection.", tracklist:[{name:"Snowfall",duration:"3:24",status:"released",key:"snowfall"},{name:"Stuck In Time",duration:"4:11",status:"released",key:"stuck-in-time"},{name:"Midnight Drive",duration:"2:58",status:"planned",key:""}] }
-];
-
-const state = {
-  token:'',
-  connected:false,
-  shas:{},
-  data:{ posts:[], songs:[], people:[], albums:[], categories:[] },
-  tab:'blog',
-  currentId:null,
-  dirty:false
-};
-
-const $ = s=>document.querySelector(s);
-const listEl = $('#list');
-const editorEl = $('#editor');
-const statusEl = $('#status');
-const dotEl = $('#dot');
-const listTitle = $('#listTitle');
-
-function setStatus(msg, type=''){
-  statusEl.textContent = msg;
-  dotEl.className = 'dot ' + (type==='ok'?'ok':type==='err'?'err':type==='work'?'work':'');
-}
-function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }
-function b64enc(str){ return btoa(unescape(encodeURIComponent(str))) }
-function b64dec(str){ return decodeURIComponent(escape(atob(str.replace(/\n/g,'')))) }
-function today(){ return new Date().toISOString().slice(0,10) }
-function ghUrl(path){ return `https://${OWNER}.github.io/${path}` }
-
-async function ghFetch(path, opts={}){
-  const url = `https://api.github.com/repos/${REPO}/contents/${path}${opts.ref?`?ref=${opts.ref}`:''}`;
-  const res = await fetch(url, {
-    ...opts,
-    headers:{ 'Authorization':`token ${state.token}`, 'Accept':'application/vnd.github.v3+json', ...opts.headers }
-  });
-  if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json();
-}
-/* ---------------------------------------------------------------------------
-   index.html-backed storage. There's no more data/*.json — everything
-   (SITE_SONGS, SITE_PEOPLE, SITE_ALBUMS, SITE_CATEGORIES, SITE_POSTS) lives
-   as hardcoded JS constants inside index.html's <script>. These helpers
-   read the whole file, pull out one constant's literal value by scanning
-   for its balanced [...] / {...}, and splice an edited value back in as
-   JSON (which is also valid JS, so it stays a working constant).
-   --------------------------------------------------------------------------- */
-
-async function getSiteHtml(){
-  const data = await ghFetch(INDEX_PATH, {ref:BRANCH});
-  state.shas[INDEX_PATH] = data.sha;
-  return b64dec(data.content);
-}
-
-async function putSiteHtml(html, message){
-  const content = b64enc(html);
-  const body = { message, content, branch:BRANCH, sha:state.shas[INDEX_PATH] };
-  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${INDEX_PATH}`,{
-    method:'PUT',
-    headers:{ 'Authorization':`token ${state.token}`, 'Content-Type':'application/json' },
-    body:JSON.stringify(body)
-  });
-  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||res.statusText) }
-  const data = await res.json();
-  state.shas[INDEX_PATH] = data.content.sha;
-  return data;
-}
-
-// Finds `const NAME = <literal>;` in html and returns the parsed value plus
-// the exact [start,end) character range of just the literal (so callers can
-// splice a replacement in without touching anything else in the file).
-function locateConst(html, name){
-  const marker = `const ${name} = `;
-  const markerStart = html.indexOf(marker);
-  if(markerStart === -1) throw new Error(`Could not find "const ${name}" in index.html`);
-  const litStart = markerStart + marker.length;
-  const openChar = html[litStart];
-  const closeChar = openChar === '[' ? ']' : '}';
-  if(openChar !== '[' && openChar !== '{') throw new Error(`Unexpected literal start for ${name}`);
-  let depth = 0, inStr = null, i = litStart;
-  for(; i < html.length; i++){
-    const c = html[i];
-    if(inStr){
-      if(c === '\\'){ i++; continue; }
-      if(c === inStr) inStr = null;
-      continue;
-    }
-    if(c === '"' || c === "'" || c === '`'){ inStr = c; continue; }
-    if(c === openChar) depth++;
-    else if(c === closeChar){
-      depth--;
-      if(depth === 0){ i++; break; }
-    }
-  }
-  if(depth !== 0) throw new Error(`Unbalanced literal while parsing ${name}`);
-  const literalText = html.slice(litStart, i);
-  const value = new Function('return (' + literalText + ')')();
-  return { value, start: litStart, end: i };
-}
-
-function extractConst(html, name){
-  return locateConst(html, name).value;
-}
-
-function replaceConst(html, name, newValue){
-  const { start, end } = locateConst(html, name);
-  const serialized = JSON.stringify(newValue, null, 2);
-  return html.slice(0, start) + serialized + html.slice(end);
-}
-
-// Save one constant's array/object back into index.html on GitHub.
-// Always re-fetches the file fresh right before writing so saving several
-// sections back-to-back in one session never hits a stale-sha conflict.
-async function saveDataBlock(constName, value, message){
-  const html = await getSiteHtml();
-  const updated = replaceConst(html, constName, value);
-  await putSiteHtml(updated, message);
-  await patchStaticIndexHtml({ bustCache: true, songs: constName === 'SITE_SONGS' ? value : null });
-}
-
-// Builds the exact same card markup app.js renders into #songs-grid, but as
-// a plain string committed straight into index.html — real static HTML, not
-// hidden metadata. Every song gets a stable id="song-<id>" anchor.
-function buildStaticSongCardsHtml(songs){
-  const list = (songs || []).filter(s => s && s.title);
-  if(!list.length){
-    return '<p style="color:var(--text-secondary,#9d94b8);padding:2rem;text-align:center;grid-column:1/-1">No songs yet.</p>';
-  }
-  return list.map(s => {
-    const badges = (s.badges || []).filter(b => !platKeyOfBadge(b)).slice(0, 3).map(b => {
-      const label = typeof b === 'string' ? b : (b.label || '');
-      const color = (b && typeof b === 'object' && b.color) || null;
-      return color
-        ? `<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:${color};color:#fff">${esc(label)}</span>`
-        : `<span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">${esc(label)}</span>`;
-    }).join('');
-    const genreChips = (s.genres || []).map(g => `<span class="song-genre-chip">${esc(g)}</span>`).join('');
-    const cover = s.cover || '';
-    const emoji = esc(s.coverEmoji || '🎵');
-    return `    <div id="song-${esc(s.id)}" class="group relative glass rounded-2xl overflow-hidden cursor-pointer glow-hover transition-all duration-300 hover:-translate-y-1" onclick="openSong('${esc(s.id)}')">
-        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
-            ${s.year ? `<span class="song-year-badge">${esc(String(s.year))}</span>` : ''}
-            ${cover ? `<img src="${esc(cover)}" alt="${esc(s.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.style.display='none'">` : ''}
-            <div class="absolute inset-0 flex items-center justify-center text-5xl opacity-20">${emoji}</div>
-            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-[1]">
-                <div class="w-14 h-14 rounded-full bg-[#A596DA] flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-            </div>
-        </div>
-        <div class="p-4">
-            <h3 class="font-semibold text-white truncate">${esc(s.title)}</h3>
-            <p class="text-sm text-[var(--text-secondary)] mt-1">${esc(s.artist || '')}</p>
-            ${genreChips ? `<div class="flex gap-1.5 mt-2 flex-wrap">${genreChips}</div>` : ''}
-            <div class="flex gap-1.5 mt-3 flex-wrap">${badges}${platformBadgesHtml(s)}</div>
-        </div>
-    </div>`;
-  }).join('\n\n');
-}
-
-// Patches the real index.html (not app.js) in one combined commit:
-//  1. Bumps ?v=<timestamp> on the <script src="app.js"> tag so browsers/GitHub
-//     Pages never serve a stale cached copy after a save (this is why edits can
-//     otherwise look like they "didn't take" even though the commit succeeded).
-//  2. If songs are passed, regenerates the REAL static song cards between the
-//     <!-- STATIC_SONGS_START/END --> markers inside #songs-grid. This is plain,
-//     visible HTML baked right into the page source — not a hidden metadata
-//     block — so any crawler, JS or not, sees the actual song titles, artists,
-//     genres, years and status badges immediately, with no JS required. Once
-//     app.js loads it re-renders the same grid dynamically for search/sort/
-//     filter, but this static version is what's there before that happens.
-async function patchStaticIndexHtml({ bustCache = true, songs = null } = {}){
-  try{
-    const info = await ghFetch(SITE_HTML_PATH, {ref:BRANCH});
-    let html = b64dec(info.content);
-    let changed = false;
-
-    if(bustCache){
-      const v = Date.now();
-      const scriptRe = /<script\s+src=["']app\.js(?:\?v=\d+)?["']\s*><\/script>/;
-      if(scriptRe.test(html)){ html = html.replace(scriptRe, `<script src="app.js?v=${v}"><\/script>`); changed = true; }
-      else console.warn('Cache-bust skipped: could not find <script src="app.js"> in index.html');
-    }
-
-    if(songs){
-      const cardsHtml = buildStaticSongCardsHtml(songs);
-      const staticRe = /(<!-- STATIC_SONGS_START -->)([\s\S]*?)(<!-- STATIC_SONGS_END -->)/;
-      if(staticRe.test(html)){ html = html.replace(staticRe, `$1\n${cardsHtml}\n$3`); changed = true; }
-      else console.warn('STATIC_SONGS markers not found in index.html; skipping static song sync');
-    }
-
-    if(!changed) return;
-
-    const content = b64enc(html);
-    const body = { message: songs ? 'cms: sync static song cards + bust cache' : 'cms: bust app.js cache', content, branch: BRANCH, sha: info.sha };
-    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${SITE_HTML_PATH}`,{
-      method:'PUT',
-      headers:{ 'Authorization':`token ${state.token}`, 'Content-Type':'application/json' },
-      body:JSON.stringify(body)
-    });
-    if(!res.ok){ console.warn('index.html patch commit failed:', res.status, res.statusText); }
-  }catch(err){
-    // Non-fatal — the actual content save above already succeeded either way.
-    console.warn('index.html patch skipped:', err.message);
-  }
-}
-async function uploadFile(file, dest){
-  const buf = await file.arrayBuffer();
-  let binary=''; const bytes=new Uint8Array(buf); for(let i=0;i<bytes.byteLength;i++) binary+=String.fromCharCode(bytes[i]);
-  const content = btoa(binary);
-  let sha=null;
-  try{ const info = await ghFetch(dest,{ref:BRANCH}); sha=info.sha; }catch{}
-  const body={message:`upload ${dest}`,content,branch:BRANCH, ...(sha?{sha}:{})};
-  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${dest}`,{
-    method:'PUT', headers:{'Authorization':`token ${state.token}`,'Content-Type':'application/json'}, body:JSON.stringify(body)
-  });
-  if(!res.ok) throw new Error('Upload failed');
-  return ghUrl(dest);
-}
-
-function migratePosts(posts){
-  return posts.map(p=>{
-    if(p.blocks) return p;
-    const blocks=[];
-    if(p.body) blocks.push({type:'text',content:p.body});
-    if(Array.isArray(p.images)) p.images.forEach(src=>blocks.push({type:'image',src,caption:''}));
-    return {...p, blocks};
-  });
-}
-
-async function connect(){
-  if(!state.token){ alert('Enter GitHub token'); return }
-  
-  setStatus('Connecting to GitHub…','work');
-  try{
-    const html = await getSiteHtml();
-    const posts = extractConst(html, 'SITE_POSTS');
-    const songs = extractConst(html, 'SITE_SONGS');
-    const people = extractConst(html, 'SITE_PEOPLE');
-    const albums = extractConst(html, 'SITE_ALBUMS');
-    const categories = extractConst(html, 'SITE_CATEGORIES');
-    state.data.posts = migratePosts(posts);
-    state.data.songs = songs;
-    state.data.people = people;
-    state.data.albums = albums;
-    state.data.categories = categories;
-    state.connected = true;
-    setStatus('Connected • Synced','ok');
-    render();
-  }catch(e){
-    console.error(e);
-    setStatus('Connection failed: '+e.message,'err');
-    // still load fallbacks for offline editing
-    state.data.posts = FALLBACK_POSTS;
-    state.data.songs = FALLBACK_SONGS;
-    state.data.people = FALLBACK_PEOPLE;
-    state.data.albums = FALLBACK_ALBUMS;
-    state.data.categories = FALLBACK_CATEGORIES;
-    render();
-  }
-}
-
-function render(){
-  renderTabs();
-  renderList();
-  renderEditor();
-}
-function renderTabs(){
-  document.querySelectorAll('.tab').forEach(b=>{
-    b.classList.toggle('active', b.dataset.tab===state.tab);
-  });
-  listTitle.textContent = state.tab==='blog'?'Blog Posts':state.tab==='songs'?'Songs':state.tab==='people'?'People':'Albums';
-}
-function renderList(){
-  listEl.innerHTML='';
-  const data = getCurrentArray();
-  const items = [...data].sort((a,b)=>{
-    if(state.tab==='blog') return (b.date||'').localeCompare(a.date||'');
-    if(state.tab==='songs' || state.tab==='albums') return (b.year||0)-(a.year||0);
-    return (a.name||'').localeCompare(b.name||'');
-  });
-  items.forEach(it=>{
-    const div=document.createElement('div');
-    div.className='item'+(it.id===state.currentId?' active':'');
-    div.onclick=()=>{ state.currentId=it.id; renderList(); renderEditor(); };
-    const thumb = document.createElement('div'); thumb.className='thumb';
-    if(state.tab==='blog'){
-      const firstImg = (it.blocks||[]).find(b=>b.type==='image')?.src;
-      if(firstImg){ const img=document.createElement('img'); img.src=firstImg; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; thumb.appendChild(img); } else thumb.textContent='📝';
-    } else if(state.tab==='songs'){
-      if(it.cover){ const img=document.createElement('img'); img.src=it.cover; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; thumb.appendChild(img);} else thumb.textContent=it.coverEmoji||'🎵';
-    } else if(state.tab==='people'){
-      if(it.avatar){ const img=document.createElement('img'); img.src=it.avatar; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; thumb.appendChild(img);} else thumb.textContent=it.icon||'👤';
-    } else if(state.tab==='categories'){
-      thumb.style.background = it.color+'20'; thumb.style.borderColor = it.color+'40'; thumb.style.color = it.color; thumb.textContent = it.name.charAt(0); thumb.style.fontWeight='700';
-    } else {
-      if(it.cover){ const img=document.createElement('img'); img.src=it.cover; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; thumb.appendChild(img);} else thumb.textContent='💿';
-    }
-    const meta=document.createElement('div'); meta.className='meta';
-    const t=document.createElement('div'); t.className='t'; t.textContent= state.tab==='blog'?it.title:it.name||it.title;
-    const s=document.createElement('div'); s.className='s';
-    if(state.tab==='blog') s.innerHTML=`<span>${it.category||''}</span> • <span>${it.date||''}</span>`;
-    else if(state.tab==='songs') s.innerHTML=`<span>${it.artist||''}</span> • <span>${it.year||''}</span>`;
-    else if(state.tab==='people'){ s.innerHTML=''; (it.tags||[]).forEach(tag=>{ const b=document.createElement('span'); b.className='badge '+tag; b.textContent=tag; s.appendChild(b); }); }
-    else if(state.tab==='categories'){ s.innerHTML=`<span class="badge" style="background:${it.color}20;color:${it.color};border-color:${it.color}40">${it.id}</span> • <span>${(it.subs||[]).length} subs</span>`; }
-    else s.innerHTML=`<span>${it.status||''}</span> • <span>${it.year||''}</span>`;
-    meta.appendChild(t); meta.appendChild(s);
-    div.appendChild(thumb); div.appendChild(meta);
-    listEl.appendChild(div);
-  });
-}
-function getCurrentArray(){
-  return state.tab==='blog'?state.data.posts:state.tab==='songs'?state.data.songs:state.tab==='people'?state.data.people:state.tab==='categories'?state.data.categories:state.data.albums;
-}
-function getCurrentItem(){
-  return getCurrentArray().find(x=>x.id===state.currentId);
-}
-
-function renderEditor(){
-  editorEl.classList.toggle('is-open', !!state.currentId);
-  document.body.classList.toggle('cms-modal-open', !!state.currentId);
-  const item = getCurrentItem();
-  if(!item){
-    editorEl.innerHTML=`<div class="empty"><div class="big">✦</div><div>Select an item or create new<br><span class="hint">Data is stored in /data/*.json</span></div></div>`;
-    return;
-  }
-  if(state.tab==='blog') renderBlogEditor(item);
-  else if(state.tab==='songs') renderSongEditor(item);
-  else if(state.tab==='people') renderPeopleEditor(item);
-  else if(state.tab==='categories') renderCategoryEditor(item);
-  else renderAlbumEditor(item);
-}
-
-function editorShell(title, saveFn, delFn){
-  editorEl.innerHTML = `
-    <div class="ed-head">
-      <div class="title">${title}</div>
-      <div class="ed-actions">
-        <button class="btn small danger" id="btnDel">Delete</button>
-        <button class="btn small primary" id="btnSave">Save to GitHub</button>
-        <button class="ed-close" id="btnCloseEditor" type="button" aria-label="Close editor">×</button>
-      </div>
+    <div class="sidebar">
+      <div class="head"><h3 id="listTitle">Blog Posts</h3><button class="btn btn-sm btn-gold" onclick="newItem()" id="newBtn" disabled>+ New</button></div>
+      <div id="itemList"><p style="color:var(--muted);font-size:13px;padding:8px">Connect to GitHub to load content.</p></div>
     </div>
-    <div class="ed-body" id="edBody"></div>
-  `;
-  $('#btnSave').onclick=saveFn;
-  $('#btnDel').onclick=delFn;
-  $('#btnCloseEditor').onclick=closeEditor;
-  return $('#edBody');
-}
-
-function renderBlogEditor(post){
-  const body = editorShell('Edit Blog Post', saveBlog, deleteBlog);
-  const catsArr = (state.data.categories||FALLBACK_CATEGORIES);
-  const cats = catsArr.map(c=>c.name);
-  const subs = (catsArr.find(c=>c.name===post.category)||{}).subs||[];
-  body.innerHTML = `
-    <div class="form">
-      <div class="field"><label>Title</label><input id="f_title" type="text" value="${esc(post.title||'')}"></div>
-      <div class="field"><label>Date</label><input id="f_date" type="date" value="${post.date||today()}"></div>
-      <div class="field"><label>Category</label><select id="f_cat">${cats.map(c=>`<option ${c===post.category?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="field"><label>Subcategory</label><select id="f_sub">${[''].concat(subs).map(s=>`<option ${s===post.subcategory?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
-      <div class="field full"><label>Color</label><div class="color-row"><input id="f_color" type="color" value="${post.color||'#A596DA'}"><span class="hint">${post.color||'#A596DA'}</span></div></div>
-      <div class="field full">
-        <label>Blocks</label>
-        <div class="row">
-          <button class="btn small" data-add="text">+ Text</button>
-          <button class="btn small" data-add="image">+ Image</button>
-          <button class="btn small" data-add="video">+ Video</button>
-          <button class="btn small" data-add="ref">+ Reference</button>
-          <button class="btn small" data-add="divider">+ Divider</button>
-        </div>
-        <div class="hint" style="margin-top:6px">Reference a song and/or a person — readers can tap it to jump straight to them.</div>
-        <div class="blocks" id="blocks"></div>
-      </div>
-    </div>
-  `;
-  $('#f_cat').onchange=e=>{ post.category=e.target.value; const s=$('#f_sub'); const found=(state.data.categories||FALLBACK_CATEGORIES).find(c=>c.name===post.category); s.innerHTML=[''].concat(found?.subs||[]).map(x=>`<option>${esc(x)}</option>`).join(''); };
-  $('#f_color').oninput=e=>{ e.target.nextElementSibling.textContent=e.target.value };
-  initBlockEditor(post);
-}
-
-function newBlockOfType(type){
-  if(type==='text') return {type:'text', heading:'', content:''};
-  if(type==='image') return {type:'image', src:'', caption:''};
-  if(type==='video') return {type:'video', src:'', url:'', caption:''};
-  if(type==='ref') return {type:'ref', songId:'', personId:'', note:''};
-  return {type:'divider'};
-}
-function initBlockEditor(item){
-  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{ item.blocks=item.blocks||[]; item.blocks.push(newBlockOfType(b.dataset.add)); renderBlockList(item); });
-  renderBlockList(item);
-}
-function renderBlockList(p){
-    const wrap = $('#blocks'); wrap.innerHTML='';
-    (p.blocks||[]).forEach((bl,i)=>{
-      const d=document.createElement('div'); d.className='block';
-      d.innerHTML=`<div class="block-head"><div class="block-type">${bl.type}</div><div class="block-ctrls">
-        <div class="icon" title="Up">↑</div><div class="icon" title="Down">↓</div><div class="icon" title="Delete">✕</div></div></div>
-        <div class="block-body"></div>`;
-      const [up,down,del]=d.querySelectorAll('.icon');
-      up.onclick=()=>{ if(i>0){ [p.blocks[i-1],p.blocks[i]]=[p.blocks[i],p.blocks[i-1]]; renderBlockList(p);} };
-      down.onclick=()=>{ if(i<p.blocks.length-1){ [p.blocks[i+1],p.blocks[i]]=[p.blocks[i],p.blocks[i+1]]; renderBlockList(p);} };
-      del.onclick=()=>{ p.blocks.splice(i,1); renderBlockList(p); };
-      const body=d.querySelector('.block-body');
-      if(bl.type==='text'){
-        body.innerHTML=`
-          <input type="text" data-k="heading" placeholder="Section heading (optional — e.g. About, Thoughts, Behind the Scenes)" value="${esc(bl.heading||'')}" style="margin-bottom:8px">
-          <textarea data-k="content" placeholder="Write...">${esc(bl.content||'')}</textarea>`;
-      }else if(bl.type==='image'){
-        body.innerHTML=`
-          <div class="upload"><label class="file-btn">Choose image<input type="file" accept="image/*"></label><span class="hint">${bl.src? 'Uploaded':'No file'}</span></div>
-          ${bl.src?`<img class="img-prev" src="${bl.src}" alt="">`:''}
-          <div style="margin-top:8px"><input type="text" data-k="caption" placeholder="Caption (optional)" value="${esc(bl.caption||'')}"></div>
-        `;
-        const fileInp=body.querySelector('input[type=file]');
-        const img=body.querySelector('img');
-        if(img) img.onclick=()=>showImg(bl.src);
-        fileInp.onchange=async e=>{
-          const f=e.target.files[0]; if(!f) return;
-          try{ setStatus('Uploading image…','work'); const url=await uploadFile(f, `${UPLOADS.posts}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); bl.src=url; setStatus('Image uploaded','ok'); renderBlockList(p);}catch(err){ setStatus('Upload failed','err'); alert(err.message) }
-        };
-      }else if(bl.type==='video'){
-        body.innerHTML=`
-          <div style="margin-bottom:10px">
-            <div class="hint" style="margin-bottom:6px">Option 1 — Upload video file</div>
-            <div class="row">
-              <label class="field" style="flex:1;gap:4px"><span class="hint" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Quality</span>
-                <select id="vq_${i}" style="font-size:12px;padding:6px 8px">
-                  <option value="original">Original (no compression)</option>
-                  <option value="high" selected>High (1080p cap, good quality)</option>
-                  <option value="medium">Medium (720p cap, smaller file)</option>
-                  <option value="low">Low (480p cap, smallest file)</option>
-                </select>
-              </label>
-              <label class="file-btn" style="align-self:flex-end;margin-bottom:0">Choose video<input type="file" accept="video/*" id="vfile_${i}"></label>
-            </div>
-            <div id="vhint_${i}" class="hint" style="margin-top:4px">${bl.src && !bl.url ? '✓ Uploaded' : 'No file selected'}</div>
-            ${bl.src && !bl.url ? `<video controls class="audio" src="${bl.src}" style="margin-top:8px;max-height:180px;border-radius:8px"></video>` : ''}
-          </div>
-          <div style="margin-bottom:10px">
-            <div class="hint" style="margin-bottom:6px">Option 2 — Paste a URL (YouTube, Vimeo, direct mp4…)</div>
-            <input type="text" data-k="url" placeholder="https://youtube.com/watch?v=… or direct .mp4 URL" value="${esc(bl.url||'')}">
-          </div>
-          <div><input type="text" data-k="caption" placeholder="Caption (optional)" value="${esc(bl.caption||'')}"></div>
-        `;
-        const vfileInp = body.querySelector(`#vfile_${i}`);
-        const vhint = body.querySelector(`#vhint_${i}`);
-        const qualSel = body.querySelector(`#vq_${i}`);
-        vfileInp.onchange = async e => {
-          const f = e.target.files[0]; if(!f) return;
-          const quality = qualSel.value;
-          try {
-            setStatus('Processing video…','work');
-            vhint.textContent = quality === 'original' ? 'Uploading…' : 'Compressing video (this may take a moment)…';
-            let fileToUpload = f;
-            if(quality !== 'original'){
-              fileToUpload = await compressVideo(f, quality);
-            }
-            const url = await uploadFile(fileToUpload, `${UPLOADS.posts}${Date.now()}-${fileToUpload.name||f.name.replace(/\s+/g,'-')}`);
-            bl.src = url; bl.url = '';
-            setStatus('Video uploaded','ok');
-            renderBlockList(p);
-          } catch(err) { setStatus('Upload failed','err'); vhint.textContent = 'Error: '+err.message; }
-        };
-      }else if(bl.type==='ref'){
-        const songs = state.data.songs||[];
-        const people = state.data.people||[];
-        body.innerHTML=`
-          <div class="row" style="gap:8px">
-            <label class="field" style="flex:1;gap:4px"><span class="hint" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Song</span>
-              <select data-k="songId"><option value="">— none —</option>${songs.map(s=>`<option value="${s.id}" ${s.id===bl.songId?'selected':''}>${esc(s.title||s.name||'Untitled')}</option>`).join('')}</select>
-            </label>
-            <label class="field" style="flex:1;gap:4px"><span class="hint" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Person</span>
-              <select data-k="personId"><option value="">— none —</option>${people.map(pp=>`<option value="${pp.id}" ${pp.id===bl.personId?'selected':''}>${esc(pp.name||'Unnamed')}</option>`).join('')}</select>
-            </label>
-          </div>
-          <div style="margin-top:8px"><input type="text" data-k="note" placeholder="Optional note (e.g. &quot;Featuring&quot;, &quot;Written about&quot;)" value="${esc(bl.note||'')}"></div>
-          <div class="hint" style="margin-top:6px">Pick a song, a person, or both — at least one so the reference has something to link to.</div>
-        `;
-        body.querySelectorAll('select[data-k]').forEach(sel=>{ sel.onchange=()=>{ bl[sel.dataset.k]=sel.value } });
-      }else{
-        body.innerHTML=`<div class="divider-prev"></div><span class="hint">Visual separator</span>`;
-      }
-      body.querySelectorAll('[data-k]').forEach(inp=>{ inp.oninput=()=>{ bl[inp.dataset.k]=inp.value } });
-      wrap.appendChild(d);
-    });
-}
-async function saveBlog(){
-  const p=getCurrentItem(); if(!p) return;
-  p.title=$('#f_title').value.trim()||'Untitled';
-  p.date=$('#f_date').value||today();
-  p.category=$('#f_cat').value;
-  p.subcategory=$('#f_sub').value;
-  p.color=$('#f_color').value;
-  p.id = p.id || slugify(p.title+'-'+p.date);
-  try{
-    setStatus('Saving post…','work');
-    const arr=state.data.posts; const idx=arr.findIndex(x=>x.id===p.id); if(idx>=0) arr[idx]=p; else arr.push(p);
-    await saveDataBlock('SITE_POSTS', arr, `blog: ${p.title}`);
-    setStatus('Post saved','ok'); renderList();
-  }catch(e){ setStatus('Save failed','err'); alert(e.message) }
-}
-async function deleteBlog(){
-  const p=getCurrentItem(); if(!p) return; if(!confirm('Delete this post?')) return;
-  try{
-    setStatus('Deleting…','work');
-    state.data.posts = state.data.posts.filter(x=>x.id!==p.id);
-    await saveDataBlock('SITE_POSTS', state.data.posts, `delete post: ${p.title}`);
-    state.currentId=null; setStatus('Deleted','ok'); render();
-  }catch(e){ setStatus('Delete failed','err'); alert(e.message) }
-}
-
-function renderSongEditor(s){
-  const body = editorShell('Edit Song', saveSong, deleteSong);
-  body.innerHTML=`
-    <div class="form">
-      <div class="field"><label>Title</label><input id="s_title" value="${esc(s.title||'')}"></div>
-      <div class="field"><label>Artist</label><input id="s_artist" value="${esc(s.artist||'DennisZeroVT')}"></div>
-      <div class="field"><label>Year</label><input id="s_year" type="number" value="${s.year||new Date().getFullYear()}"></div>
-      <div class="field full"><label>Status</label>
-        <div id="status_pills" class="row" style="gap:8px;flex-wrap:wrap"></div>
-        <div class="hint">Click a status — it lights up and automatically adds/updates the matching badge below, so you never have to remember the badge color yourself.</div>
-      </div>
-      <div class="field"><label>Cover Emoji</label><input id="s_emoji" value="${esc(s.coverEmoji||'🎵')}"></div>
-      <div class="field full"><label>Genres</label>
-        <div id="genre_editor" class="badge-editor"></div>
-        <div class="row" style="gap:8px;align-items:center;margin-top:4px">
-          <input id="genre_input" list="genre_options" placeholder="Add a genre and press Enter" style="flex:1">
-          <button class="btn small" id="add_genre" type="button">+ Add</button>
-        </div>
-        <datalist id="genre_options">
-          <option value="Ambient"><option value="Electronic"><option value="Orchestral">
-          <option value="Lo-fi"><option value="Rock"><option value="Alternative">
-          <option value="Pop"><option value="Hip-Hop"><option value="Drum & Bass">
-          <option value="Synthwave"><option value="Cinematic"><option value="Chiptune">
-          <option value="Jazz"><option value="Classical"><option value="Soundtrack">
-          <option value="Experimental">
-        </datalist>
-        <div class="hint">Tag this song with one or more genres. Used for the genre filter chips, search, and sorting on the Music page.</div>
-      </div>
-      <div class="field full"><label>Badges</label>
-        <div id="badge_editor" class="badge-editor"></div>
-        <button class="btn small" id="add_badge" type="button">+ Add Badge</button>
-        <div class="hint">Pick a label and color for each badge. Colors show on music.html</div>
-      </div>
-      <div class="field"><label>Cover Image</label>
-        <div class="upload"><label class="file-btn">Upload cover<input type="file" accept="image/*" id="s_coverfile"></label><span class="hint">${s.cover?'Uploaded':''}</span></div>
-        ${s.cover?`<img class="img-prev" src="${s.cover}" onclick="showImg('${s.cover}')">`:''}
-        <input id="s_cover" type="text" placeholder="Cover URL" value="${esc(s.cover||'')}" style="margin-top:8px">
-      </div>
-      <div class="field"><label>Audio</label>
-        <div class="upload"><label class="file-btn">Upload audio<input type="file" accept="audio/*" id="s_audiofile"></label><span class="hint">${s.audio?'Uploaded':''}</span></div>
-        <input id="s_audio" type="text" placeholder="Audio URL" value="${esc(s.audio||'')}">
-        ${s.audio?`<audio class="audio" controls src="${s.audio}"></audio>`:''}
-      </div>
-      <div class="field full"><label>Platforms <span class="hint">· tap to turn on. Each badge links to your artist page.</span></label>
-        <div class="plats">${PLATFORM_ORDER.map(k=>`<button type="button" class="plat" data-k="${k}" style="--c:${PLAT_META[k].c}" aria-pressed="${songPlats(s).includes(k)}">${PLAT_META[k].label}</button>`).join('')}</div>
-      </div>
-      <div class="field full"><label>Credits</label>
-        <div id="credits_editor"></div>
-        <button class="btn small" id="add_credit" type="button">+ Add Credit</button>
-        <datalist id="credit_role_options">
-          <option value="Drums"><option value="Guitar"><option value="Bass">
-          <option value="Piano / Keys"><option value="Vocals"><option value="Backing Vocals">
-          <option value="Lyrics"><option value="Melody"><option value="Mixing">
-          <option value="Mastering"><option value="Artwork"><option value="Inspiration">
-          <option value="Producer"><option value="Co-producer"><option value="Songwriter">
-          <option value="Featured Artist">
-        </datalist>
-        <div class="hint">Role + who did it (e.g. "Drums" — Kula). Pick a person from your Friends/Collaborators list to make their name clickable on the song page — it'll open their profile. Leave it as "Not linked" to just show a plain name (session musicians, etc. who aren't listed elsewhere).</div>
-      </div>
-      <div class="field full">
-        <label>Content Blocks (shown in the song overlay)</label>
-        <div class="row">
-          <button class="btn small" data-add="text">+ Text</button>
-          <button class="btn small" data-add="image">+ Image</button>
-          <button class="btn small" data-add="video">+ Video</button>
-          <button class="btn small" data-add="divider">+ Divider</button>
-        </div>
-        <div class="blocks" id="blocks"></div>
-        <div class="hint">Build the song's overlay content freely: add a text block with heading "About", another with heading "Thoughts", drop in a YouTube video, a behind-the-scenes photo, whatever the song needs. Skip sections you don't have — no empty tabs. If left empty, the legacy fields below (if filled in) are used instead.</div>
-      </div>
-      <details class="field full">
-        <summary style="cursor:pointer;color:var(--text-secondary);font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:8px">Legacy fields (fallback only — used if Content Blocks above is empty)</summary>
-        <div class="field full"><label>About</label><textarea id="s_about">${esc(s.about||'')}</textarea></div>
-        <div class="field full"><label>Thoughts</label><textarea id="s_thoughts">${esc(s.thoughts||'')}</textarea></div>
-        <div class="field full"><label>Miscellaneous</label><textarea id="s_misc">${esc(s.miscellaneous||'')}</textarea></div>
-        <div class="field full"><label>Behind The Scenes</label><textarea id="s_bts">${esc(s.behindTheScenes||'')}</textarea></div>
-      </details>
-    </div>
-  `;
-  // --- Status pills (click to set status; auto-syncs the matching badge) ---
-  const STATUS_OPTIONS = [
-    { label: 'Released', color: '#10B981' },
-    { label: 'Work in Progress', color: '#F59E0B' },
-    { label: 'Pending', color: '#6B7280' },
-    { label: 'Announced', color: '#3B82F6' },
-    { label: 'Demo', color: '#8B5CF6' }
-  ];
-  s.status = s.status || 'Released';
-  function syncStatusBadge(){
-    const statusLabels = STATUS_OPTIONS.map(o => o.label.toLowerCase());
-    s.badges = (s.badges || []).filter(b => !statusLabels.includes((b.label || '').toLowerCase()));
-    const opt = STATUS_OPTIONS.find(o => o.label === s.status);
-    if (opt) s.badges.unshift({ label: opt.label, color: opt.color });
-  }
-  function renderStatusPills(){
-    const wrap = $('#status_pills'); wrap.innerHTML = '';
-    STATUS_OPTIONS.forEach(opt => {
-      const active = s.status === opt.label;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = opt.label;
-      btn.style.cssText = `padding:7px 14px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${opt.color};transition:all .15s;` +
-        (active ? `background:${opt.color};color:#0a0a0f;` : `background:transparent;color:${opt.color};`);
-      btn.onclick = () => { s.status = opt.label; syncStatusBadge(); renderStatusPills(); renderBadges(); };
-      wrap.appendChild(btn);
-    });
-  }
-  renderStatusPills();
-
-  // --- Badge editor with color ---
-  const defaultColors = { 'Released':'#10B981','pending':'#6B7280','Pending':'#6B7280','Spotify':'#1DB954','Apple Music':'#FA243C','Tidal':'#000000','Amazon':'#FF9900','YouTube Music':'#FF0000','Deezer':'#FEAA2D' };
-  s.badges = (s.badges||[]).map(b => typeof b==='string' ? {label:b, color: defaultColors[b]||'#A596DA'} : {label:b.label||'', color:b.color||'#A596DA'});
-  const badgeWrap = $('#badge_editor');
-  function renderBadges(){
-    badgeWrap.innerHTML='';
-    s.badges.forEach((b,i)=>{
-      const row=document.createElement('div'); row.className='row'; row.style='gap:8px;margin-bottom:8px;align-items:center';
-      row.innerHTML = `
-        <input data-i="${i}" data-k="label" value="${esc(b.label)}" placeholder="Label" style="flex:1;min-width:120px">
-        <input type="color" data-i="${i}" data-k="color" value="${b.color}" title="Pick color" style="width:44px;height:32px;padding:0;border:none;background:none">
-        <span class="preview" style="display:inline-block;padding:2px 8px;border-radius:2px;background:${b.color};color:#fff;font-size:11px;min-width:60px;text-align:center">${esc(b.label||'')}</span>
-        <button class="btn small danger" data-del="${i}" type="button">✕</button>
-      `;
-      badgeWrap.appendChild(row);
-    });
-    badgeWrap.querySelectorAll('[data-k]').forEach(inp=>{
-      inp.oninput=e=>{
-        const i=+e.target.dataset.i; const k=e.target.dataset.k;
-        s.badges[i][k]=e.target.value;
-        const prev = e.target.parentElement.querySelector('.preview');
-        if(prev){ prev.textContent=s.badges[i].label; prev.style.background=s.badges[i].color; }
-      };
-    });
-    badgeWrap.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>{ s.badges.splice(+btn.dataset.del,1); renderBadges(); } });
-  }
-  $('#add_badge').onclick=()=>{ s.badges.push({label:'New', color:'#A596DA'}); renderBadges(); };
-  renderBadges();
-  document.querySelectorAll('.plat').forEach(b=>{ b.onclick=()=>b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')!=='true'); });
-
-  // --- Genre tag editor ---
-  s.genres = Array.isArray(s.genres) ? s.genres.slice() : [];
-  const genreWrap = $('#genre_editor');
-  function renderGenres(){
-    genreWrap.innerHTML = '';
-    s.genres.forEach((g,i)=>{
-      const chip = document.createElement('span');
-      chip.className = 'preview';
-      chip.style = 'display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:2px;background:rgba(165,150,218,.18);border:1px solid rgba(165,150,218,.4);color:#C4B5FD;font-size:12px;margin:0 6px 6px 0';
-      chip.innerHTML = `${esc(g)} <button type="button" data-del="${i}" style="background:none;border:none;color:#C4B5FD;cursor:pointer;font-size:13px;line-height:1">✕</button>`;
-      genreWrap.appendChild(chip);
-    });
-    genreWrap.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>{ s.genres.splice(+btn.dataset.del,1); renderGenres(); }; });
-  }
-  function addGenre(){
-    const inp = $('#genre_input');
-    const val = (inp.value||'').trim();
-    if(val && !s.genres.includes(val)){ s.genres.push(val); renderGenres(); }
-    inp.value='';
-  }
-  $('#add_genre').onclick=addGenre;
-  $('#genre_input').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addGenre(); } });
-  renderGenres();
-
-  // --- Credits editor: role + name, optionally linked to a real person ---
-  s.credits = Array.isArray(s.credits) ? s.credits.slice() : [];
-  const creditsWrap = $('#credits_editor');
-  const peopleList = state.data.people || [];
-  function renderCredits(){
-    creditsWrap.innerHTML = '';
-    s.credits.forEach((c, i) => {
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.style = 'gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap';
-      const personOptions = peopleList.map(p =>
-        `<option value="${esc(p.id)}" ${c.personId===p.id?'selected':''}>${esc(p.name)}</option>`
-      ).join('');
-      row.innerHTML = `
-        <input data-i="${i}" data-k="role" list="credit_role_options" value="${esc(c.role||'')}" placeholder="Role (e.g. Drums, Mixing Engineer)" style="flex:1;min-width:160px">
-        <select data-i="${i}" data-k="personId" style="min-width:170px">
-          <option value="">— Not linked (plain text) —</option>
-          ${personOptions}
-        </select>
-        <input data-i="${i}" data-k="name" value="${esc(c.name||'')}" placeholder="Display name" style="flex:1;min-width:140px">
-        <button class="btn small danger" data-del="${i}" type="button">✕</button>
-      `;
-      creditsWrap.appendChild(row);
-    });
-    creditsWrap.querySelectorAll('[data-k="role"], [data-k="name"]').forEach(inp => {
-      inp.oninput = e => { s.credits[+e.target.dataset.i][e.target.dataset.k] = e.target.value; };
-    });
-    creditsWrap.querySelectorAll('[data-k="personId"]').forEach(sel => {
-      sel.onchange = e => {
-        const i = +e.target.dataset.i;
-        const pid = e.target.value;
-        s.credits[i].personId = pid || null;
-        if (pid) {
-          const person = peopleList.find(p => p.id === pid);
-          if (person) s.credits[i].name = person.name;
-        }
-        renderCredits();
-      };
-    });
-    creditsWrap.querySelectorAll('[data-del]').forEach(btn => {
-      btn.onclick = () => { s.credits.splice(+btn.dataset.del, 1); renderCredits(); };
-    });
-  }
-  $('#add_credit').onclick = () => { s.credits.push({ role: '', name: '', personId: null }); renderCredits(); };
-  renderCredits();
-
-  // --- Content blocks editor ---
-  s.blocks = Array.isArray(s.blocks) ? s.blocks : [];
-  initBlockEditor(s);
-
-  $('#s_coverfile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ setStatus('Uploading cover…','work'); const url=await uploadFile(f, `${UPLOADS.covers}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#s_cover').value=url; setStatus('Cover uploaded','ok'); }catch(err){ setStatus('Upload failed','err') } };
-  $('#s_audiofile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ setStatus('Uploading audio…','work'); const url=await uploadFile(f, `${UPLOADS.songs}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#s_audio').value=url; setStatus('Audio uploaded','ok'); }catch(err){ setStatus('Upload failed','err') } };
-}
-/* ---- Platform pills: on = badge + button linking to the ARTIST page ---- */
-const ARTIST_PAGES = {
-  "spotify": "https://open.spotify.com/artist/1sDYqTh1SQNJksxNAXbxyS",
-  "apple": "https://music.apple.com/nl/artist/denniszerovt/1840250778",
-  "tidal": "https://tidal.com/artist/66966649",
-  "amazon": "https://music.amazon.com/artists/B0FNKV8PTN/denniszerovt",
-  "deezer": "https://www.deezer.com/en/artist/342624221",
-  "youtube": "https://youtube.com/@denniszerovt"
-};
-const PLAT_META = {
-  spotify:{label:'Spotify',c:'#1DB954',bg:'#1DB954',fg:'#ffffff'},
-  apple:{label:'Apple Music',c:'#FA243C',bg:'#FA243C',fg:'#ffffff'},
-  tidal:{label:'Tidal',c:'#d9d9d9',bg:'#000000',fg:'#ffffff',bd:'rgba(255,255,255,0.25)'},
-  amazon:{label:'Amazon Music',c:'#00A8E1',bg:'#00A8E1',fg:'#062430'},
-  deezer:{label:'Deezer',c:'#A238FF',bg:'#A238FF',fg:'#ffffff'},
-  youtube:{label:'YouTube',c:'#FF0000',bg:'#FF0000',fg:'#ffffff'}
-};
-const PLATFORM_ORDER = ['spotify','apple','tidal','amazon','deezer','youtube'];
-const PLAT_ALIAS = {'spotify':'spotify','apple':'apple','apple music':'apple','tidal':'tidal','amazon':'amazon','amazon music':'amazon','deezer':'deezer','youtube':'youtube','youtube music':'youtube'};
-function platKeyOfBadge(b){ return PLAT_ALIAS[String(typeof b==='string'?b:(b&&b.label)||'').trim().toLowerCase()]||null; }
-function songPlats(s){
-  const on=new Set();
-  Object.entries(s.streaming||{}).forEach(([k,v])=>{ if(v&&ARTIST_PAGES[k]) on.add(k); });
-  (s.badges||[]).forEach(b=>{ const k=platKeyOfBadge(b); if(k) on.add(k); });
-  return PLATFORM_ORDER.filter(k=>on.has(k));
-}
-function platformBadgesHtml(s){
-  return songPlats(s).map(k=>{ const m=PLAT_META[k];
-    return `<a class="plat-badge text-[10px] px-2 py-0.5 rounded-full" href="${ARTIST_PAGES[k]}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${m.label} artist page" style="background:${m.bg};color:${m.fg}${m.bd?';border:1px solid '+m.bd:''}">${m.label}</a>`; }).join('');
-}
-async function saveSong(){
-  const s=getCurrentItem(); if(!s) return;
-  s.title=$('#s_title').value.trim(); s.artist=$('#s_artist').value.trim(); s.year=parseInt($('#s_year').value)||new Date().getFullYear();
-  s.coverEmoji=$('#s_emoji').value.trim(); 
-  s.genres = Array.isArray(s.genres) ? s.genres.filter(Boolean) : [];
-  s.badges=(s.badges||[]).map(b=>({label:(b.label||'').trim(), color:b.color||'#A596DA'})).filter(b=>b.label);
-  s.cover=$('#s_cover').value.trim(); s.audio=$('#s_audio').value.trim();
-  s.streaming={}; PLATFORM_ORDER.forEach(k=>{ const b=document.querySelector('.plat[data-k="'+k+'"]'); s.streaming[k]=(b&&b.getAttribute('aria-pressed')==='true')?ARTIST_PAGES[k]:''; });
-  s.badges=(s.badges||[]).filter(b=>!platKeyOfBadge(b));
-  s.about=$('#s_about').value; s.thoughts=$('#s_thoughts').value; s.miscellaneous=$('#s_misc').value; s.behindTheScenes=$('#s_bts').value;
-  s.credits = (s.credits||[]).map(c=>({ role:(c.role||'').trim(), name:(c.name||'').trim(), personId:c.personId||null })).filter(c=>c.role || c.name);
-  s.id = s.id || slugify(s.title);
-  try{ setStatus('Saving song…','work'); const arr=state.data.songs; const i=arr.findIndex(x=>x.id===s.id); if(i>=0) arr[i]=s; else arr.push(s); await saveDataBlock('SITE_SONGS', arr, `song: ${s.title}`); setStatus('Song saved','ok'); renderList(); }catch(e){ setStatus('Save failed','err'); alert(e.message) }
-}
-async function deleteSong(){ const s=getCurrentItem(); if(!s||!confirm('Delete song?')) return; try{ setStatus('Deleting…','work'); state.data.songs=state.data.songs.filter(x=>x.id!==s.id); await saveDataBlock('SITE_SONGS', state.data.songs, `delete song: ${s.title}`); state.currentId=null; setStatus('Deleted','ok'); render(); }catch(e){ setStatus('Delete failed','err'); } }
-
-const CREDIT_ROLES = [
-  'Drums', 'Guitar', 'Bass', 'Piano / Keys', 'Vocals', 'Backing Vocals',
-  'Lyrics', 'Melody', 'Mixing', 'Mastering', 'Artwork', 'Inspiration',
-  'Producer', 'Co-producer', 'Songwriter', 'Featured Artist', 'Other'
-];
-
-function renderPeopleEditor(p){
-  const body = editorShell('Edit Person', savePerson, deletePerson);
-
-  if (!p.credits && p.projects) {
-    p.credits = (p.projects || []).map(title => ({ song: title, songId: '', role: 'Collaborator', note: '' }));
-  }
-  p.credits = p.credits || [];
-
-  body.innerHTML = `
-    <div class="alert warn">Avatars upload to <b>Friends/</b>. Use square PNG for best results.</div>
-    <div class="form">
-      <div class="field"><label>Name</label><input id="p_name" value="${esc(p.name||'')}"></div>
-      <div class="field"><label>Handle</label><input id="p_handle" value="${esc(p.handle||'')}"></div>
-      <div class="field"><label>Role / tagline</label><input id="p_role" value="${esc(p.role||'')}"></div>
-      <div class="field"><label>Icon (Font Awesome class or emoji)</label><input id="p_icon" value="${esc(p.icon||'👤')}"></div>
-      <div class="field full"><label>Avatar</label>
-        <div class="upload"><label class="file-btn">Upload avatar<input type="file" accept="image/*" id="p_avfile"></label><span class="hint">${p.avatar?'Uploaded':''}</span></div>
-        ${p.avatar ? `<img class="img-prev" src="${p.avatar}" style="max-height:120px" onclick="showImg('${p.avatar}')">` : ''}
-        <input id="p_avatar" type="text" value="${esc(p.avatar||'')}" placeholder="Avatar URL" style="margin-top:8px">
-      </div>
-      <div class="field full"><label>Bio</label><textarea id="p_bio">${esc(p.bio||'')}</textarea></div>
-      <div class="field">
-        <label>Tags</label>
-        <div class="row">
-          <label class="switch"><input type="checkbox" id="p_friend" ${p.tags?.includes('friend')?'checked':''}><span>friend</span></label>
-          <label class="switch"><input type="checkbox" id="p_collab" ${p.tags?.includes('collab')?'checked':''}><span>collab</span></label>
-        </div>
-      </div>
-      <div class="field"><label>Show on Home</label><label class="switch"><input type="checkbox" id="p_home" ${p.showOnHome?'checked':''}><span>Visible</span></label></div>
-      <div class="field"><label>Color class</label><input id="p_color" value="${esc(p.color||'from-purple-500/30 to-purple-600/10')}" placeholder="from-purple-500/30 to-purple-600/10"></div>
-
-      <div class="field full">
-        <label>Credits (what they did on each song)</label>
-        <div id="p_credits_wrap" style="display:flex;flex-direction:column;gap:10px;margin-top:6px"></div>
-        <button class="btn small" id="p_addcredit" style="margin-top:10px;align-self:flex-start">+ Add Credit</button>
-        <div class="hint" style="margin-top:6px">Each credit links this person to a specific song with their exact contribution.</div>
-      </div>
-
-      <div class="field full"><label>Socials <span class="hint">· paste a @handle or a full link. Leave empty to hide.</span></label>
-        <div class="links-grid">
-          ${SOCIAL_ORDER.map(k=>`<div><label class="hint"><i class="${SOCIAL_META[k].icon}"></i> ${SOCIAL_META[k].label}</label><input id="p_${k}" placeholder="${k==='website'?'example.com':k==='spotify'?'artist link':'@handle or link'}" value="${esc(p.links?.[k]||'')}"></div>`).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-
-  $('#p_avfile').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
-    try { setStatus('Uploading avatar…','work'); const url = await uploadFile(f, `${UPLOADS.people}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#p_avatar').value = url; setStatus('Avatar uploaded','ok'); }
-    catch { setStatus('Upload failed','err'); }
-  };
-
-  function renderCreditRows() {
-    const wrap = $('#p_credits_wrap');
-    wrap.innerHTML = '';
-    p.credits.forEach((cr, i) => {
-      const songOptions = (state.data.songs || []).map(s =>
-        `<option value="${s.id}" ${cr.songId === s.id ? 'selected' : ''}>${esc(s.title)}</option>`
-      ).join('');
-      const roleOptions = CREDIT_ROLES.map(r =>
-        `<option value="${r}" ${cr.role === r ? 'selected' : ''}>${r}</option>`
-      ).join('');
-
-      const row = document.createElement('div');
-      row.style.cssText = 'background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:4px;padding:12px;display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;align-items:start';
-      row.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <label class="hint">Song</label>
-          <select class="cr_song">
-            <option value="">— pick a song —</option>
-            ${songOptions}
-          </select>
-          <input class="cr_song_title" type="text" placeholder="Or type title manually" value="${esc(cr.song||'')}" style="margin-top:4px;font-size:12px;opacity:.7">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <label class="hint">Role / Contribution</label>
-          <select class="cr_role">
-            ${roleOptions}
-            ${!CREDIT_ROLES.includes(cr.role) && cr.role ? `<option value="${esc(cr.role)}" selected>${esc(cr.role)}</option>` : ''}
-          </select>
-          <input class="cr_note" type="text" placeholder="Short note (optional)" value="${esc(cr.note||'')}" style="margin-top:4px;font-size:12px;opacity:.7">
-        </div>
-        <div class="icon" title="Remove" style="margin-top:20px">✕</div>
-      `;
-
-      const songSel  = row.querySelector('.cr_song');
-      const songTitle = row.querySelector('.cr_song_title');
-      const roleSel  = row.querySelector('.cr_role');
-      const noteInp  = row.querySelector('.cr_note');
-      const delBtn   = row.querySelector('.icon');
-
-      songSel.onchange = () => {
-        const found = (state.data.songs||[]).find(s => s.id === songSel.value);
-        if (found) { cr.songId = found.id; cr.song = found.title; songTitle.value = found.title; }
-        else { cr.songId = ''; }
-      };
-      songTitle.oninput = () => { cr.song = songTitle.value; };
-      roleSel.onchange  = () => { cr.role = roleSel.value; };
-      noteInp.oninput   = () => { cr.note = noteInp.value; };
-      delBtn.onclick    = () => { p.credits.splice(i, 1); renderCreditRows(); };
-
-      wrap.appendChild(row);
-    });
-  }
-
-  renderCreditRows();
-  $('#p_addcredit').onclick = () => {
-    p.credits.push({ song: '', songId: '', role: 'Collaborator', note: '' });
-    renderCreditRows();
-  };
-}
-
-/* ---- Socials for friends / collabs: accepts @handle, handle, or a full link ---- */
-const SOCIAL_META = {
-  twitter:   { label: 'X / Twitter', icon: 'fab fa-x-twitter', base: 'https://x.com/' },
-  twitch:    { label: 'Twitch',      icon: 'fab fa-twitch',    base: 'https://twitch.tv/' },
-  youtube:   { label: 'YouTube',     icon: 'fab fa-youtube',   base: 'https://youtube.com/@' },
-  instagram: { label: 'Instagram',   icon: 'fab fa-instagram', base: 'https://instagram.com/' },
-  spotify:   { label: 'Spotify',     icon: 'fab fa-spotify',   base: null },
-  website:   { label: 'Website',     icon: 'fas fa-globe',     base: null }
-};
-const SOCIAL_ORDER = ['twitter','twitch','youtube','instagram','spotify','website'];
-function socialUrl(kind, value){
-  let v = String(value == null ? '' : value).trim();
-  if (!v) return '';
-  if (/^https?:\/\//i.test(v)) return v;
-  if (kind === 'website') return 'https://' + v.replace(/^\/+/, '');
-  if (/^(www\.|m\.)?(x\.com|twitter\.com|twitch\.tv|youtube\.com|youtu\.be|instagram\.com|open\.spotify\.com)/i.test(v)) return 'https://' + v;
-  const m = SOCIAL_META[kind];
-  if (!m || !m.base) return 'https://' + v;
-  v = v.replace(/^@/, '');
-  if (kind === 'youtube' && /^UC[\w-]{20,}$/.test(v)) return 'https://youtube.com/channel/' + v;
-  return m.base + v;
-}
-function personSocials(links){
-  links = links || {};
-  const keys = SOCIAL_ORDER.concat(Object.keys(links).filter(k => !SOCIAL_ORDER.includes(k)));
-  return keys.map(k => {
-    const url = socialUrl(k, links[k]);
-    if (!url) return null;
-    const m = SOCIAL_META[k] || { label: k.charAt(0).toUpperCase() + k.slice(1), icon: 'fas fa-link' };
-    return { key: k, name: m.label, icon: m.icon, url };
-  }).filter(Boolean);
-}
-
-async function savePerson(){
-  const p = getCurrentItem(); if (!p) return;
-  p.name    = $('#p_name').value.trim();
-  p.handle  = $('#p_handle').value.trim();
-  p.role    = $('#p_role').value.trim();
-  p.icon    = $('#p_icon').value.trim();
-  p.avatar  = $('#p_avatar').value.trim();
-  p.bio     = $('#p_bio').value;
-  p.color   = $('#p_color').value.trim();
-  p.tags    = [];
-  if ($('#p_friend').checked) p.tags.push('friend');
-  if ($('#p_collab').checked) p.tags.push('collab');
-  p.showOnHome = $('#p_home').checked;
-  p.credits = p.credits || [];
-  p.projects = p.credits.map(c => c.song).filter(Boolean);
-  p.links = {};
-  SOCIAL_ORDER.forEach(k => { const v = socialUrl(k, $('#p_'+k).value); if (v) p.links[k] = v; });
-  p.id = p.id || slugify(p.name);
-  try {
-    setStatus('Saving person…','work');
-    const arr = state.data.people;
-    const i = arr.findIndex(x => x.id === p.id);
-    if (i >= 0) arr[i] = p; else arr.push(p);
-    await saveDataBlock('SITE_PEOPLE', arr, `person: ${p.name}`);
-    setStatus('Person saved','ok');
-    renderList();
-  } catch(e) { setStatus('Save failed','err'); alert(e.message); }
-}
-async function deletePerson(){ const p=getCurrentItem(); if(!p||!confirm('Delete person?')) return; try{ setStatus('Deleting…','work'); state.data.people=state.data.people.filter(x=>x.id!==p.id); await saveDataBlock('SITE_PEOPLE', state.data.people, `delete person: ${p.name}`); state.currentId=null; setStatus('Deleted','ok'); render(); }catch(e){ setStatus('Delete failed','err'); } }
-
-function renderCategoryEditor(item){
-  editorShell('Edit Category', saveCategories, deleteCategoryItem);
-  const body = document.querySelector('.ed-body');
-  const wrap = document.createElement('div'); wrap.className='form';
-  wrap.innerHTML = `
-    <div class="field"><label>ID (slug)</label><input type="text" id="cat_id" value="${esc(item.id||'')}"><div class="hint">lowercase-with-dashes</div></div>
-    <div class="field"><label>Name</label><input type="text" id="cat_name" value="${esc(item.name||'')}"></div>
-    <div class="field"><label>Color</label><div class="color-row"><input type="color" id="cat_colorpick" value="${item.color||'#A596DA'}"><input type="text" id="cat_colortext" value="${item.color||'#A596DA'}"></div></div>
-    <div class="field"><label>Preview</label><div style="padding:10px;background:rgba(0,0,0,.3);border-radius:4px"><span class="badge" id="catPrev" style="background:${(item.color||'#A596DA')}20;color:${item.color||'#A596DA'};border-color:${(item.color||'#A596DA')}40">${esc(item.name||'')}</span></div></div>
-    <div class="field full"><label>Subcategories</label><div id="subsList" class="chips" style="min-height:42px;padding:8px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid var(--border)"></div><div class="row" style="margin-top:8px"><input type="text" id="newSub" placeholder="Add subcategory..." style="flex:1"><button class="btn small" id="btnAddSub">+ Add</button></div></div>
-  `;
-  body.appendChild(wrap);
-
-  const idInp = document.getElementById('cat_id');
-  const nameInp = document.getElementById('cat_name');
-  const colorPick = document.getElementById('cat_colorpick');
-  const colorText = document.getElementById('cat_colortext');
-  const prev = document.getElementById('catPrev');
-
-  function syncColor(c){ item.color=c; colorPick.value=c; colorText.value=c; prev.style.background=c+'20'; prev.style.color=c; prev.style.borderColor=c+'40'; state.dirty=true; }
-
-  idInp.oninput = ()=>{ item.id=idInp.value.toLowerCase().replace(/[^a-z0-9-]/g,'-'); state.dirty=true; };
-  nameInp.oninput = ()=>{ item.name=nameInp.value; prev.textContent=nameInp.value; state.dirty=true; };
-  colorPick.oninput = ()=>syncColor(colorPick.value);
-  colorText.oninput = ()=>{ if(/^#[0-9a-fA-F]{6}$/.test(colorText.value)) syncColor(colorText.value); };
-
-  renderSubs();
-  document.getElementById('btnAddSub').onclick = addCategorySub;
-  document.getElementById('newSub').addEventListener('keydown', e=>{ if(e.key==='Enter'){ addCategorySub(); e.preventDefault(); }});
-}
-function renderSubs(){
-  const item = getCurrentItem(); const box = document.getElementById('subsList'); if(!box||!item) return;
-  box.innerHTML = (item.subs||[]).map((s,i)=>`<span class="chip" data-sub="${i}">${esc(s)} ×</span>`).join('') || '<span class="hint">No subs yet</span>';
-  box.querySelectorAll('.chip').forEach(chip=>chip.onclick=()=>removeCategorySub(parseInt(chip.dataset.sub)));
-}
-function addCategorySub(){ const item=getCurrentItem(); const inp=document.getElementById('newSub'); const v=inp.value.trim(); if(!v||!item) return; item.subs=item.subs||[]; item.subs.push(v); inp.value=''; state.dirty=true; renderSubs(); renderList(); }
-function removeCategorySub(i){ const item=getCurrentItem(); if(!item) return; item.subs.splice(i,1); state.dirty=true; renderSubs(); renderList(); }
-async function saveCategories(){ try{ setStatus('Saving categories.json…','work'); await saveDataBlock('SITE_CATEGORIES', state.data.categories, 'cms: update categories'); setStatus('Categories saved ✓','ok'); state.dirty=false; }catch(e){ setStatus('Save failed: '+e.message,'err'); } }
-async function deleteCategoryItem(){ const item=getCurrentItem(); if(!item||!confirm('Delete category "'+item.name+'"?')) return; try{ setStatus('Deleting…','work'); state.data.categories=state.data.categories.filter(x=>x.id!==item.id); await saveDataBlock('SITE_CATEGORIES', state.data.categories, `delete category: ${item.name}`); state.currentId=null; setStatus('Deleted','ok'); render(); }catch(e){ setStatus('Delete failed','err'); } }
-
-function renderAlbumEditor(a){
-  const body = editorShell('Edit Album', saveAlbum, deleteAlbum);
-  body.innerHTML=`
-    <div class="form">
-      <div class="field"><label>Name</label><input id="a_name" value="${esc(a.name||'')}"></div>
-      <div class="field"><label>Artist</label><input id="a_artist" value="${esc(a.artist||'DennisZeroVT')}"></div>
-      <div class="field"><label>Year</label><input id="a_year" type="number" value="${a.year||new Date().getFullYear()}"></div>
-      <div class="field"><label>Status</label><select id="a_status">${['In Progress','Released','Planned'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-      <div class="field full"><label>Cover</label>
-        <div class="upload"><label class="file-btn">Upload cover<input type="file" accept="image/*" id="a_coverfile"></label></div>
-        ${a.cover?`<img class="img-prev" src="${a.cover}" onclick="showImg('${a.cover}')">`:''}
-        <input id="a_cover" type="text" value="${esc(a.cover||'')}" placeholder="Cover URL" style="margin-top:8px">
-      </div>
-      <div class="field full"><label>Description</label><textarea id="a_desc">${esc(a.description||'')}</textarea></div>
-      <div class="field full">
-        <label>Tracklist</label>
-        <div class="tracks" id="tracks"></div>
-        <button class="btn small" id="addTrack" style="margin-top:8px">+ Add Track</button>
-      </div>
-    </div>
-  `;
-  $('#a_coverfile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ setStatus('Uploading…','work'); const url=await uploadFile(f, `${UPLOADS.covers}${Date.now()}-${f.name.replace(/\s+/g,'-')}`); $('#a_cover').value=url; setStatus('Uploaded','ok'); }catch{ setStatus('Upload failed','err') } };
-  const tracksWrap=$('#tracks');
-  function renderTracks(){
-    tracksWrap.innerHTML='';
-    (a.tracklist||[]).forEach((t,i)=>{
-      const row=document.createElement('div'); row.className='track';
-      row.innerHTML=`
-        <input value="${esc(t.name||'')}" placeholder="Track name" data-k="name">
-        <input value="${esc(t.duration||'')}" placeholder="3:24" data-k="duration">
-        <select data-k="status">${['planned','in-progress','released'].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}</select>
-        <select data-k="key"><option value="">— link song —</option>${state.data.songs.map(s=>`<option value="${s.id}" ${t.key===s.id?'selected':''}>${esc(s.title)}</option>`).join('')}</select>
-        <div class="icon" title="Delete">✕</div>
-      `;
-      row.querySelectorAll('[data-k]').forEach(inp=>inp.oninput=()=>t[inp.dataset.k]=inp.value);
-      row.querySelector('.icon').onclick=()=>{ a.tracklist.splice(i,1); renderTracks(); };
-      tracksWrap.appendChild(row);
-    });
-  }
-  a.tracklist = a.tracklist||[];
-  renderTracks();
-  $('#addTrack').onclick=()=>{ a.tracklist.push({name:'',duration:'',status:'planned',key:''}); renderTracks(); };
-}
-async function saveAlbum(){
-  const a=getCurrentItem(); if(!a) return;
-  a.name=$('#a_name').value.trim(); a.artist=$('#a_artist').value.trim(); a.year=parseInt($('#a_year').value)||new Date().getFullYear();
-  a.status=$('#a_status').value; a.cover=$('#a_cover').value.trim(); a.description=$('#a_desc').value;
-  a.id = a.id || slugify(a.name);
-  try{ setStatus('Saving album…','work'); const arr=state.data.albums; const i=arr.findIndex(x=>x.id===a.id); if(i>=0) arr[i]=a; else arr.push(a); await saveDataBlock('SITE_ALBUMS', arr, `album: ${a.name}`); setStatus('Album saved','ok'); renderList(); }catch(e){ setStatus('Save failed','err'); alert(e.message) }
-}
-async function deleteAlbum(){ const a=getCurrentItem(); if(!a||!confirm('Delete album?')) return; try{ setStatus('Deleting…','work'); state.data.albums=state.data.albums.filter(x=>x.id!==a.id); await saveDataBlock('SITE_ALBUMS', state.data.albums, `delete album: ${a.name}`); state.currentId=null; setStatus('Deleted','ok'); render(); }catch(e){ setStatus('Delete failed','err'); } }
-
-async function compressVideo(file, quality){
-  const presets = {
-    high:   { maxH: 1080, videoBps: 4_000_000, audioBps: 128_000 },
-    medium: { maxH: 720,  videoBps: 1_500_000, audioBps:  96_000 },
-    low:    { maxH: 480,  videoBps:   600_000, audioBps:  64_000 },
-  };
-  const p = presets[quality] || presets.medium;
-
-  const vid = document.createElement('video');
-  vid.muted = true;
-  vid.src = URL.createObjectURL(file);
-  await new Promise((res,rej)=>{ vid.onloadedmetadata=res; vid.onerror=rej; });
-
-  const scale = Math.min(1, p.maxH / vid.videoHeight);
-  const w = Math.round(vid.videoWidth  * scale / 2) * 2;
-  const h = Math.round(vid.videoHeight * scale / 2) * 2;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-
-  const mimeTypes = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
-  const mimeType = mimeTypes.find(m=>MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-  const stream = canvas.captureStream(30);
-  try {
-    const audioCtx = new AudioContext();
-    const src = audioCtx.createMediaElementSource(vid);
-    const dest = audioCtx.createMediaStreamDestination();
-    src.connect(dest);
-    dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
-  } catch(e){ /* no audio track, fine */ }
-
-  const recorder = new MediaRecorder(stream, {
-    mimeType,
-    videoBitsPerSecond: p.videoBps,
-    audioBitsPerSecond: p.audioBps,
-  });
-  const chunks = [];
-  recorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
-
-  recorder.start(100);
-  vid.play();
-  await new Promise(res=>{
-    vid.ontimeupdate = ()=>ctx.drawImage(vid, 0, 0, w, h);
-    vid.onended = ()=>{ recorder.stop(); res(); };
-  });
-  await new Promise(res=>{ recorder.onstop=res; });
-
-  URL.revokeObjectURL(vid.src);
-  const blob = new Blob(chunks, { type: mimeType });
-  const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-  return new File([blob], file.name.replace(/\.[^.]+$/, '')+`_${quality}.${ext}`, { type: mimeType });
-}
-
-function esc(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) }
-function closeEditor(){
-  state.currentId=null;
-  document.body.classList.remove('cms-modal-open');
-  editorEl.classList.remove('is-open');
-  renderList();
-  renderEditor();
-}
-
-function showImg(src){ $('#modalImg').src=src; $('#modal').classList.add('show') }
-
-$('#tabs').onclick=e=>{
-  const btn=e.target.closest('.tab'); if(!btn) return;
-  state.tab=btn.dataset.tab; state.currentId=null; render();
-};
-$('#btnNew').onclick=()=>{
-  const arr=getCurrentArray();
-  if(state.tab==='blog'){ const id='post-'+Date.now(); arr.unshift({id,title:'New Post',category:(state.data.categories[0]?.name||'Daily Life'),subcategory:'',date:today(),color:'#A596DA',blocks:[{type:'text',content:''}]}); state.currentId=id; }
-  else if(state.tab==='songs'){ const id='song-'+Date.now(); arr.unshift({id,title:'New Song',artist:'DennisZeroVT',year:new Date().getFullYear(),status:'Pending',genres:[],coverEmoji:'🎵',badges:[],streaming:{},blocks:[],credits:[],about:'',thoughts:'',miscellaneous:'',behindTheScenes:''}); state.currentId=id; }
-  else if(state.tab==='people'){ const id='person-'+Date.now(); arr.unshift({id,name:'New Person',handle:'',role:'',avatar:'',bio:'',tags:['friend'],links:{},projects:[],color:'text-purple-400',icon:'👤',showOnHome:true}); state.currentId=id; }
-  else if(state.tab==='categories'){ const id='cat-'+Date.now(); arr.unshift({id,name:'New Category',color:'#A596DA',subs:[]}); state.currentId=id; }
-  else { const id='album-'+Date.now(); arr.unshift({id,name:'New Album',artist:'DennisZeroVT',year:new Date().getFullYear(),cover:'',status:'In Progress',description:'',tracklist:[]}); state.currentId=id; }
-  render();
-};
-$('#btnConnect').onclick=()=>{ if(!state.token){ window.__showLock&&window.__showLock(); return } connect(); };
-
-(function init(){
-  try{localStorage.removeItem('dzcms_token')}catch(e){}
-  setStatus('Ready — enter token to connect');
-  state.data.posts = migratePosts(FALLBACK_POSTS);
-  state.data.songs = FALLBACK_SONGS;
-  state.data.people = FALLBACK_PEOPLE;
-  state.data.albums = FALLBACK_ALBUMS;
-  state.data.categories = FALLBACK_CATEGORIES;
-  renderList();
-})();
-</script>
-<script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("[data-product-id]");if(!a)return;e.preventDefault();var pid=a.getAttribute("data-product-id");if(pid)parent.postMessage({type:"ecto-artifact-link-click",productId:pid},"*")})})();document.addEventListener('keydown',e=>{ if(e.key==='Escape' && state.currentId) closeEditor(); });
-</script>
-
-<div id="lock" style="position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:#0d0b14;background-image:radial-gradient(900px 500px at 50% -80px,rgba(165,150,218,.2),transparent 70%)">
-  <div style="width:100%;max-width:360px;padding:28px;border:1px solid #33295a;border-radius:6px;background:linear-gradient(180deg,#1a1628,#12121b);text-align:center">
-    <div class="logo" style="margin:0 auto 14px">D</div>
-    <div style="font-weight:700;font-size:18px;margin-bottom:4px">Dennis CMS</div>
-    <div style="color:var(--muted);font-size:13px;margin-bottom:18px">Enter password to unlock</div>
-    <input id="lockPw" type="password" placeholder="Password" autocomplete="off" style="text-align:center">
-    <button id="lockBtn" class="btn primary" style="width:100%;margin-top:12px">Unlock</button>
-    <div id="lockErr" style="color:var(--red);font-size:12px;min-height:16px;margin-top:10px"></div>
+    <div class="editor" id="editor"><div class="placeholder">Enter token → Connect → select an item.<br><br>Use a <b>fine-grained token</b> limited to this repo with <b>Contents: Read &amp; write</b>.</div></div>
   </div>
 </div>
+
+<input type="file" id="fileInput" class="hidden">
+<div id="toast"></div>
+
 <script>
-/* Token is stored AES-256-GCM encrypted (key = PBKDF2-SHA256, 600k iterations of the password).
-   Format: base64( salt16 | iv12 | ciphertext+tag ). Nothing readable is in this file. */
-(function(){
-  const VAULT="mPtvj1fB4U23NZuVz8fCiZVkJBF/C3d1QER50YqXSKSP6e51oDgqtNbRilLvgW1AFaYbhaVhVzHtZ03ezEj+8xEFdw8pe8Z4k/2ftyJbDLzbL0o8";
-  const lock=document.getElementById('lock'),pw=document.getElementById('lockPw'),
-        btn=document.getElementById('lockBtn'),err=document.getElementById('lockErr');
-  async function decrypt(password){
-    const raw=Uint8Array.from(atob(VAULT),c=>c.charCodeAt(0));
-    const salt=raw.slice(0,16),iv=raw.slice(16,28),data=raw.slice(28);
-    const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
-    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
-    return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,data));
+"use strict";
+/* ---------- gate ---------- */
+const sha256 = async s => { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); };
+const firstRun = !localStorage.getItem('cmsPassHash');
+if (firstRun) { document.getElementById('gateSub').textContent = 'First run — create a password for this device'; document.getElementById('gatePass2').classList.remove('hidden'); document.getElementById('gateBtn').textContent = 'Create & Unlock'; }
+if (sessionStorage.getItem('cmsUnlocked') === '1' && !firstRun) enterApp();
+async function gateSubmit() {
+  const p = document.getElementById('gatePass').value;
+  if (!p) return toast('Enter a password', true);
+  if (firstRun) {
+    if (p.length < 4) return toast('Use at least 4 characters', true);
+    if (p !== document.getElementById('gatePass2').value) return toast('Passwords do not match', true);
+    localStorage.setItem('cmsPassHash', await sha256(p));
+  } else if (await sha256(p) !== localStorage.getItem('cmsPassHash')) return toast('Wrong password', true);
+  sessionStorage.setItem('cmsUnlocked', '1');
+  enterApp();
+}
+function enterApp() { document.getElementById('gate').classList.add('hidden'); document.getElementById('app').style.display = 'block'; }
+function lock() { sessionStorage.removeItem('cmsUnlocked'); location.reload(); }
+function resetPass() { if (confirm('Reset the CMS password on this device?')) { localStorage.removeItem('cmsPassHash'); location.reload(); } }
+document.getElementById('gatePass').addEventListener('keydown', e => { if (e.key === 'Enter') gateSubmit(); });
+
+/* ---------- state ---------- */
+const COLLECTIONS = { posts: 'SITE_POSTS', songs: 'SITE_SONGS', people: 'SITE_PEOPLE', categories: 'SITE_CATEGORIES', albums: 'SITE_ALBUMS' };
+const TITLES = { posts: 'Blog Posts', songs: 'Songs', people: 'People', categories: 'Categories', albums: 'Albums' };
+const STATUSES = ['Released', 'Work in Progress', 'Pending', 'Announced', 'Demo'];
+const STATUS_COLORS = { 'Released': '#10B981', 'Work in Progress': '#F59E0B', 'Pending': '#6B7280', 'Announced': '#3B82F6', 'Demo': '#8B5CF6' };
+const PLATS = [['spotify', 'Spotify', '#1DB954'], ['apple', 'Apple Music', '#FA243C'], ['tidal', 'Tidal', '#000000'], ['amazon', 'Amazon', '#FF9900'], ['deezer', 'Deezer', '#FEAA2D'], ['youtube', 'YouTube Music', '#FF0000']];
+const SOCIALS = ['twitter', 'twitch', 'youtube', 'instagram', 'spotify', 'website'];
+let G = { token: '', repo: '', branch: 'main', sha: '', text: '', data: null, tab: 'posts', sel: -1, dirty: false };
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+let toastT;
+function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = err ? 'show err' : 'show'; clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2600); }
+function markDirty() { G.dirty = true; $('saveBtn').disabled = false; $('dirtyFlag').classList.remove('hidden'); }
+
+/* ---------- github ---------- */
+async function gh(path, opts = {}) {
+  const r = await fetch('https://api.github.com' + path, { ...opts, headers: { 'Authorization': 'Bearer ' + G.token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || r.status); }
+  return r.json();
+}
+function b64decode(b64) { const bin = atob(b64.replace(/\n/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+function b64encode(str) { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); }
+function pagesBase() { const [owner, name] = G.repo.split('/'); return name === owner + '.github.io' ? `https://${name}/` : `https://${owner}.github.io/${name}/`; }
+
+async function connect() {
+  G.token = $('ghToken').value.trim(); G.repo = $('ghRepo').value.trim(); G.branch = $('ghBranch').value.trim() || 'main';
+  if (!G.token || !G.repo.includes('/')) return toast('Enter a token and owner/repo', true);
+  $('connectBtn').disabled = true;
+  try {
+    const f = await gh(`/repos/${G.repo}/contents/app.js?ref=${G.branch}`);
+    G.sha = f.sha; G.text = b64decode(f.content);
+    G.data = parseData(G.text);
+    sessionStorage.setItem('cmsToken', G.token);
+    $('connDot').classList.add('on'); $('newBtn').disabled = false;
+    renderList(); renderEditor();
+    toast('Connected — content loaded ✓');
+  } catch (e) { toast('Connect failed: ' + e.message, true); }
+  $('connectBtn').disabled = false;
+}
+
+/* ---------- parse / build ---------- */
+const START = '/* SITE_CONTENT_START */', END = '/* SITE_CONTENT_END */';
+function extractArray(text, name) {
+  const i = text.indexOf('const ' + name + ' = ');
+  if (i < 0) throw new Error(name + ' not found in app.js');
+  const j = text.indexOf('[', i);
+  let depth = 0, k = j, inStr = false;
+  for (; k < text.length; k++) {
+    const c = text[k];
+    if (inStr) { if (c === '\\') k++; else if (c === '"') inStr = false; }
+    else if (c === '"') inStr = true;
+    else if (c === '[') depth++;
+    else if (c === ']' && --depth === 0) { k++; break; }
   }
-  async function go(){
-    if(!pw.value) return;
-    btn.disabled=true; btn.textContent='Unlocking…'; err.textContent='';
-    try{
-      state.token=await decrypt(pw.value);
-      pw.value=''; lock.style.display='none';
-      connect();
-    }catch(e){
-      err.textContent=(window.crypto&&crypto.subtle)?'Wrong password':'Needs https (secure context)';
-      pw.select();
-    }
-    btn.disabled=false; btn.textContent='Unlock';
+  return JSON.parse(text.slice(j, k));
+}
+function parseData(text) {
+  if (!text.includes(START) || !text.includes(END)) throw new Error('Content markers missing — use the new app.js');
+  return { posts: extractArray(text, 'SITE_POSTS'), songs: extractArray(text, 'SITE_SONGS'), people: extractArray(text, 'SITE_PEOPLE'), categories: extractArray(text, 'SITE_CATEGORIES'), albums: extractArray(text, 'SITE_ALBUMS') };
+}
+function buildSection() {
+  const d = G.data;
+  d.songs.forEach(s => {
+    s.badges = [{ label: s.status || 'Released', color: STATUS_COLORS[s.status] || '#E7D19C' }]
+      .concat(PLATS.filter(([k]) => (s.streaming || {})[k] && s.streaming[k].trim()).map(([, label, color]) => ({ label, color })));
+  });
+  const order = [['SITE_SONGS', d.songs], ['SITE_ALBUMS', d.albums], ['SITE_PEOPLE', d.people], ['SITE_CATEGORIES', d.categories], ['SITE_POSTS', d.posts]];
+  return START + '\n' + order.map(([n, v]) => 'const ' + n + ' = ' + JSON.stringify(v, null, 2) + ';').join('\n') + '\n' + END;
+}
+async function saveAll() {
+  if (!G.data) return;
+  $('saveBtn').disabled = true;
+  try {
+    const a = G.text.indexOf(START), b = G.text.indexOf(END) + END.length;
+    const newText = G.text.slice(0, a) + buildSection() + G.text.slice(b);
+    const res = await gh(`/repos/${G.repo}/contents/app.js`, { method: 'PUT', body: JSON.stringify({ message: 'CMS: content update', content: b64encode(newText), sha: G.sha, branch: G.branch }) });
+    G.sha = res.content.sha; G.text = newText; G.dirty = false;
+    $('dirtyFlag').classList.add('hidden');
+    toast('Saved ✓ — GitHub Pages rebuilds in ~1 minute');
+  } catch (e) { toast('Save failed: ' + e.message, true); $('saveBtn').disabled = false; }
+}
+window.addEventListener('beforeunload', e => { if (G.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- uploads ---------- */
+let uploadTarget = null;
+function pickFile(path, kind, accept) { uploadTarget = { path, kind }; const f = $('fileInput'); f.accept = accept; f.value = ''; f.click(); }
+$('fileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file || !uploadTarget) return;
+  const dirs = { cover: 'SongData/AlbumArt', audio: 'SongData/Songs', avatar: 'Friends', image: 'images/posts' };
+  const path = dirs[uploadTarget.kind] + '/' + Date.now() + '-' + file.name.replace(/[^\w.\-]+/g, '-');
+  toast('Uploading ' + file.name + '…');
+  try {
+    const buf = await file.arrayBuffer();
+    let bin = ''; const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    await gh(`/repos/${G.repo}/contents/${path}`, { method: 'PUT', body: JSON.stringify({ message: 'CMS: upload ' + path, content: btoa(bin), branch: G.branch }) });
+    setPath(cur(), uploadTarget.path, pagesBase() + path);
+    markDirty(); renderEditor();
+    toast('Uploaded ✓');
+  } catch (err) { toast('Upload failed: ' + err.message, true); }
+});
+
+/* ---------- list / selection ---------- */
+const list = () => G.data[G.tab];
+const cur = () => list()[G.sel];
+const labelOf = it => it.title || it.name || it.id;
+function setTab(t) { G.tab = t; G.sel = -1; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t)); $('listTitle').textContent = TITLES[t]; renderList(); renderEditor(); }
+function renderList() {
+  const wrap = $('itemList');
+  if (!G.data) return;
+  wrap.innerHTML = '';
+  list().forEach((it, i) => {
+    const b = document.createElement('button');
+    b.className = 'item-btn' + (i === G.sel ? ' active' : '');
+    b.innerHTML = esc(labelOf(it)) + `<small>${esc(it.status || it.category || it.role || it.date || '')}</small>`;
+    b.onclick = () => { G.sel = i; renderList(); renderEditor(); };
+    wrap.appendChild(b);
+  });
+  if (!list().length) wrap.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px">Nothing here yet.</p>';
+}
+function newItem() {
+  const id = G.tab.slice(0, -1) + '-' + Date.now();
+  const templates = {
+    posts: { id, title: 'New post', category: (G.data.categories[0] || {}).name || '', subcategory: '', date: new Date().toISOString().slice(0, 10), color: '', blocks: [{ type: 'text', content: '' }] },
+    songs: { id, title: 'New song', artist: 'DennisZeroVT', year: new Date().getFullYear(), status: 'Work in Progress', genres: [], coverEmoji: '🎵', badges: [], streaming: {}, blocks: [], credits: [], about: '', thoughts: '', miscellaneous: '', behindTheScenes: '', cover: '', audio: '' },
+    people: { id, name: 'New person', handle: '', role: '', avatar: '', bio: '', tags: ['friend'], links: {}, credits: [], icon: 'fas fa-user' },
+    categories: { id: 'cat-' + Date.now(), name: 'New category', color: '#E7D19C', subs: [] },
+    albums: { id, name: 'New album', artist: 'DennisZeroVT', year: new Date().getFullYear(), cover: '', status: 'In Progress', description: '', tracklist: [] }
+  };
+  list().push(templates[G.tab]);
+  G.sel = list().length - 1;
+  markDirty(); renderList(); renderEditor();
+}
+function delItem() {
+  if (G.sel < 0 || !confirm('Delete "' + labelOf(cur()) + '"? (committed on Save)')) return;
+  list().splice(G.sel, 1); G.sel = -1;
+  markDirty(); renderList(); renderEditor();
+}
+
+/* ---------- field helpers ---------- */
+function setPath(obj, path, val) { const parts = path.split('.'); let o = obj; for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]] = o[parts[i]] || {}; o[parts[parts.length - 1]] = val; }
+function getPath(obj, path) { return path.split('.').reduce((o, k) => (o == null ? '' : o[k]), obj); }
+const F = (label, key, val, type = 'text') => `<div class="field"><label>${label}</label><input type="${type}" data-k="${key}" value="${esc(val)}"></div>`;
+const TA = (label, key, val, rows = 4) => `<div class="field"><label>${label}</label><textarea rows="${rows}" data-k="${key}">${esc(val)}</textarea></div>`;
+const SEL = (label, key, val, opts) => `<div class="field"><label>${label}</label><select data-k="${key}">${opts.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o || '—')}</option>`).join('')}</select></div>`;
+const ASSET = (label, key, val, kind, accept) => `<div class="field"><label>${label}</label><div class="asset-row"><input data-k="${key}" value="${esc(val)}" placeholder="URL or upload →"><button class="btn btn-sm" onclick="pickFile('${key}','${kind}','${accept}')"><i class="fas fa-upload"></i></button></div></div>`;
+const songOpts = (val, empty) => `<select data-ck="songId">${empty ? '<option value="">—</option>' : ''}${G.data.songs.map(s => `<option value="${esc(s.id)}"${s.id === val ? ' selected' : ''}>${esc(s.title)}</option>`).join('')}</select>`;
+
+/* ---------- blocks editor ---------- */
+function blocksEditor(blocks) {
+  const cards = (blocks || []).map((b, i) => {
+    let fields = '';
+    if (b.type === 'text') fields = F('Heading', 'heading', b.heading || '') + TA('Content', 'content', b.content || '', 5);
+    else if (b.type === 'image') fields = ASSET('Image', 'src', b.src || '', 'image', 'image/*') + F('Caption', 'caption', b.caption || '');
+    else if (b.type === 'video') fields = F('YouTube URL', 'url', b.url || '') + F('Caption', 'caption', b.caption || '');
+    else if (b.type === 'ref') fields = `<div class="grid2"><div class="field"><label>Song</label><select data-bk="songId"><option value="">—</option>${G.data.songs.map(s => `<option value="${esc(s.id)}"${s.id === b.songId ? ' selected' : ''}>${esc(s.title)}</option>`).join('')}</select></div><div class="field"><label>Person</label><select data-bk="personId"><option value="">—</option>${G.data.people.map(p => `<option value="${esc(p.id)}"${p.id === b.personId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div></div>` + F('Note', 'note', b.note || '');
+    else if (b.type === 'divider') fields = '<p style="color:var(--muted);font-size:12px">A horizontal divider.</p>';
+    return `<div class="sub-card" data-bi="${i}">
+      <div class="sc-head"><strong>${esc(b.type)}</strong>
+        <select data-bk="type" style="width:110px">${['text', 'image', 'video', 'ref', 'divider'].map(t => `<option${t === b.type ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <button class="icon-btn" data-act="b-up" title="Up"><i class="fas fa-arrow-up"></i></button>
+        <button class="icon-btn" data-act="b-down" title="Down"><i class="fas fa-arrow-down"></i></button>
+        <button class="icon-btn del" data-act="b-del" title="Remove"><i class="fas fa-trash"></i></button>
+      </div>${fields}</div>`;
+  }).join('');
+  return `<div class="section-label">Content blocks</div>${cards}
+    <div class="add-row">${['text', 'image', 'video', 'ref', 'divider'].map(t => `<button class="btn btn-sm" data-act="b-add" data-btype="${t}">+ ${t}</button>`).join('')}</div>`;
+}
+function creditsEditor(credits, isPerson) {
+  const cards = (credits || []).map((c, i) => `<div class="sub-card" data-ci="${i}">
+    <div class="sc-head"><strong>Credit ${i + 1}</strong><button class="icon-btn del" data-act="c-del"><i class="fas fa-trash"></i></button></div>
+    <div class="grid2">
+      <div class="field"><label>${isPerson ? 'Song' : 'Person'}</label>${isPerson
+        ? `<select data-ck="songId"><option value="">—</option>${G.data.songs.map(s => `<option value="${esc(s.id)}"${s.id === c.songId ? ' selected' : ''}>${esc(s.title)}</option>`).join('')}</select>`
+        : `<select data-ck="personId"><option value="">—</option>${G.data.people.map(p => `<option value="${esc(p.id)}"${p.id === c.personId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`}</div>
+      ${F('Role', 'role', c.role || '', 'text').replace('data-k', 'data-ck')}
+    </div>
+    ${isPerson ? F('Note', 'note', c.note || '').replace('data-k', 'data-ck') : ''}
+  </div>`).join('');
+  return `<div class="section-label">Credits</div>${cards}<div class="add-row"><button class="btn btn-sm" data-act="c-add">+ credit</button></div>`;
+}
+
+/* ---------- editor render ---------- */
+function renderEditor() {
+  const ed = $('editor');
+  if (!G.data || G.sel < 0) { ed.innerHTML = '<div class="placeholder">Select an item on the left, or create a new one.</div>'; return; }
+  const it = cur();
+  let html = `<div class="ed-head"><h2>${esc(labelOf(it))}</h2><button class="btn btn-danger btn-sm" onclick="delItem()"><i class="fas fa-trash"></i> Delete</button></div>`;
+  if (G.tab === 'posts') {
+    const cat = G.data.categories.find(c => c.name === it.category);
+    html += F('Title', 'title', it.title) +
+      `<div class="grid3">${SEL('Category', 'category', it.category, G.data.categories.map(c => c.name))}${SEL('Subcategory', 'subcategory', it.subcategory || '', [''].concat(cat ? cat.subs : []))}${F('Date', 'date', it.date, 'date')}</div>` +
+      blocksEditor(it.blocks);
+  } else if (G.tab === 'songs') {
+    html += `<div class="grid2">${F('Title', 'title', it.title)}${F('Artist', 'artist', it.artist)}</div>
+      <div class="grid3">${F('Year', 'year', it.year, 'number')}${SEL('Status', 'status', it.status, STATUSES)}${F('Cover emoji', 'coverEmoji', it.coverEmoji || '🎵')}</div>
+      ${F('Genres (comma separated)', 'genres', (it.genres || []).join(', ')).replace('data-k="genres"', 'data-k="genres" data-type="csv"')}
+      ${ASSET('Cover art', 'cover', it.cover || '', 'cover', 'image/*')}
+      ${ASSET('Audio file', 'audio', it.audio || '', 'audio', 'audio/*')}
+      <div class="section-label">Streaming links</div><div class="grid2">${PLATS.map(([k, label]) => F(label, 'streaming.' + k, (it.streaming || {})[k] || '')).join('')}</div>
+      <p style="font-size:11.5px;color:var(--muted)">Filled links show the platform badge on the site. All buttons point to your artist pages.</p>
+      ${blocksEditor(it.blocks)}
+      ${creditsEditor(it.credits, false)}
+      <details><summary>Legacy story fields (used when there are no blocks)</summary>
+      ${TA('About', 'about', it.about || '')}${TA('Thoughts', 'thoughts', it.thoughts || '')}${TA('Behind the scenes', 'behindTheScenes', it.behindTheScenes || '')}${TA('Miscellaneous', 'miscellaneous', it.miscellaneous || '')}</details>`;
+  } else if (G.tab === 'people') {
+    html += `<div class="grid2">${F('Name', 'name', it.name)}${F('Handle', 'handle', it.handle || '')}</div>
+      ${F('Role line', 'role', it.role || '')}
+      ${ASSET('Avatar', 'avatar', it.avatar || '', 'avatar', 'image/*')}
+      ${TA('Bio', 'bio', it.bio || '', 5)}
+      <div class="field"><label>Tags</label><div class="checks">
+        <label><input type="checkbox" data-tag="friend"${(it.tags || []).includes('friend') ? ' checked' : ''}> Friend</label>
+        <label><input type="checkbox" data-tag="collab"${(it.tags || []).includes('collab') ? ' checked' : ''}> Collaborator</label>
+      </div></div>
+      <div class="grid2">${F('Icon class', 'icon', it.icon || 'fas fa-user')}${F('Show on home', 'showOnHome', it.showOnHome ? 'true' : '').replace('type="text"', 'type="text" placeholder="true / empty"')}</div>
+      <div class="section-label">Links (handle or full URL)</div><div class="grid2">${SOCIALS.map(k => F(k, 'links.' + k, (it.links || {})[k] || '')).join('')}</div>
+      ${creditsEditor(it.credits, true)}`;
+  } else if (G.tab === 'categories') {
+    html += `<div class="grid2">${F('Name', 'name', it.name)}${F('Color', 'color', it.color || '#E7D19C', 'color')}</div>
+      ${TA('Subcategories (one per line)', 'subs', (it.subs || []).join('\n'), 5).replace('data-k="subs"', 'data-k="subs" data-type="lines"')}`;
+  } else if (G.tab === 'albums') {
+    html += `<div class="grid2">${F('Name', 'name', it.name)}${F('Artist', 'artist', it.artist)}</div>
+      <div class="grid2">${F('Year', 'year', it.year, 'number')}${SEL('Status', 'status', it.status, ['In Progress', 'Released', 'Announced'])}</div>
+      ${ASSET('Cover', 'cover', it.cover || '', 'cover', 'image/*')}
+      ${TA('Description', 'description', it.description || '', 3)}
+      <div class="section-label">Tracklist</div>
+      ${(it.tracklist || []).map((t, i) => `<div class="sub-card" data-ti="${i}">
+        <div class="sc-head"><strong>Track ${i + 1}</strong><button class="icon-btn del" data-act="t-del"><i class="fas fa-trash"></i></button></div>
+        <div class="grid3">
+          <div class="field"><label>Song</label><select data-tk="key"><option value="">—</option>${G.data.songs.map(s => `<option value="${esc(s.id)}"${s.id === t.key ? ' selected' : ''}>${esc(s.title)}</option>`).join('')}</select></div>
+          <div class="field"><label>Duration</label><input data-tk="duration" value="${esc(t.duration || '')}"></div>
+          <div class="field"><label>Status</label><select data-tk="status">${['planned', 'recording', 'done'].map(s => `<option${s === t.status ? ' selected' : ''}>${s}</option>`).join('')}</select></div>
+        </div></div>`).join('')}
+      <div class="add-row"><button class="btn btn-sm" data-act="t-add">+ track</button></div>`;
   }
-  btn.onclick=go;
-  pw.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
-  window.__showLock=()=>{ lock.style.display='flex'; pw.focus(); };
-  pw.focus();
-})();
+  ed.innerHTML = html;
+}
+
+/* ---------- editor events (delegated) ---------- */
+function applyField(el) {
+  const it = cur(); if (!it) return;
+  let val = el.value;
+  if (el.dataset.type === 'csv') val = val.split(',').map(s => s.trim()).filter(Boolean);
+  else if (el.dataset.type === 'lines') val = val.split('\n').map(s => s.trim()).filter(Boolean);
+  else if (el.type === 'number') val = parseInt(val) || '';
+  if (el.dataset.tag) {
+    const tags = new Set(it.tags || []);
+    el.checked ? tags.add(el.dataset.tag) : tags.delete(el.dataset.tag);
+    it.tags = [...tags];
+  } else if (el.dataset.k) {
+    if (el.dataset.k === 'showOnHome') val = val.trim().toLowerCase() === 'true';
+    setPath(it, el.dataset.k, val);
+    if (el.dataset.k === 'key' || el.dataset.k === 'category') { /* selects handled below too */ }
+  } else if (el.dataset.bk) {
+    const b = it.blocks[+el.closest('[data-bi]').dataset.bi];
+    b[el.dataset.bk] = val;
+    if (el.dataset.bk === 'type') { renderEditor(); }
+  } else if (el.dataset.ck) {
+    const c = it.credits[+el.closest('[data-ci]').dataset.ci];
+    c[el.dataset.ck] = val;
+    if (el.dataset.ck === 'songId') { const s = G.data.songs.find(x => x.id === val); if (s) c.song = s.title; }
+    if (el.dataset.ck === 'personId') { const p = G.data.people.find(x => x.id === val); if (p) c.name = p.name; }
+  } else if (el.dataset.tk) {
+    const t = it.tracklist[+el.closest('[data-ti]').dataset.ti];
+    t[el.dataset.tk] = val;
+    if (el.dataset.tk === 'key') { const s = G.data.songs.find(x => x.id === val); if (s) t.name = s.title; }
+  } else return;
+  markDirty();
+  if (el.dataset.k === 'title' || el.dataset.k === 'name' || el.dataset.k === 'category') renderList();
+}
+$('editor').addEventListener('input', e => { if (e.target.tagName !== 'SELECT') applyField(e.target); });
+$('editor').addEventListener('change', e => { if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'date') applyField(e.target); });
+$('editor').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const it = cur(); const act = btn.dataset.act;
+  const idx = el => +el.closest('[data-bi],[data-ci],[data-ti]').dataset[Object.keys(el.closest('[data-bi],[data-ci],[data-ti]').dataset)[0]];
+  if (act === 'b-add') { it.blocks = it.blocks || []; it.blocks.push({ type: btn.dataset.btype }); }
+  else if (act === 'b-del') it.blocks.splice(idx(btn), 1);
+  else if (act === 'b-up') { const i = idx(btn); if (i > 0) [it.blocks[i - 1], it.blocks[i]] = [it.blocks[i], it.blocks[i - 1]]; }
+  else if (act === 'b-down') { const i = idx(btn); if (i < it.blocks.length - 1) [it.blocks[i + 1], it.blocks[i]] = [it.blocks[i], it.blocks[i + 1]]; }
+  else if (act === 'c-add') { it.credits = it.credits || []; it.credits.push(G.tab === 'people' ? { song: '', songId: '', role: '', note: '' } : { role: '', name: '', personId: '' }); }
+  else if (act === 'c-del') it.credits.splice(idx(btn), 1);
+  else if (act === 't-add') { it.tracklist = it.tracklist || []; it.tracklist.push({ name: '', duration: '', status: 'planned', key: '' }); }
+  else if (act === 't-del') it.tracklist.splice(idx(btn), 1);
+  markDirty(); renderEditor();
+});
+
+/* restore token for the session */
+const savedToken = sessionStorage.getItem('cmsToken');
+if (savedToken) $('ghToken').value = savedToken;
 </script>
 </body>
 </html>
